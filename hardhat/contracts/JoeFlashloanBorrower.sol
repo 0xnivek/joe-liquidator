@@ -5,67 +5,81 @@ import "./ERC3156FlashLenderInterface.sol";
 import "./ERC3156FlashBorrowerInterface.sol";
 import "./JWrappedNative.sol";
 
-interface Comptroller {
-    function isMarketListed(address cTokenAddress) external view returns (bool);
+interface Joetroller {
+    function isMarketListed(address jTokenAddress) external view returns (bool);
 }
 
 interface ERC20 {
     function approve(address spender, uint256 amount) external;
 }
 
-// FlashloanBorrower is a simple flashloan Borrower implementation for testing
 contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
     /**
-     * @notice C.R.E.A.M. comptroller address
+     * @notice Joetroller address
      */
-    address public comptroller;
+    address public joetroller;
 
-    constructor(address _comptroller) {
-        comptroller = _comptroller;
+    constructor(address _joetroller) {
+        joetroller = _joetroller;
     }
 
+    /**
+     * @notice Perform flash loan for given jToken and amount
+     * @param _flashloanLender The address of the FlashloanLender contract
+     * @param _jBorrowToken The address of the jToken contract to borrow from
+     * @param _borrowAmount The amount of the tokens to borrow
+     */
     function doFlashloan(
         address _flashloanLender,
         address _jBorrowToken,
         uint256 _borrowAmount
     ) external {
-        bytes memory data = abi.encode(_jBorrowToken, _borrowAmount);
+        address underlyingToken = JWrappedNative(_jBorrowToken).underlying();
+        bytes memory data = abi.encode(underlyingToken, _borrowAmount);
         ERC3156FlashLenderInterface(_flashloanLender).flashLoan(
             this,
-            JWrappedNative(_jBorrowToken).underlying(),
+            underlyingToken,
             _borrowAmount,
             data
         );
     }
 
+    /**
+     * @notice Called by FlashLoanLender once flashloan is approved
+     * @param _initiator The address that initiated this flash loan
+     * @param _underlyingToken The address of the underlying token contract borrowed from
+     * @param _amount The amount of the tokens borrowed
+     * @param _fee The fee for this flash loan
+     * @param _data The encoded data used for this flash loan
+     */
     function onFlashLoan(
-        address initiator,
-        address token,
-        uint256 amount,
-        uint256 fee,
-        bytes calldata data
+        address _initiator,
+        address _underlyingToken,
+        uint256 _amount,
+        uint256 _fee,
+        bytes calldata _data
     ) external override returns (bytes32) {
         require(
-            Comptroller(comptroller).isMarketListed(msg.sender),
-            "untrusted message sender"
+            Joetroller(joetroller).isMarketListed(msg.sender),
+            "JoeFlashloanBorrower: Untrusted message sender"
         );
         require(
-            initiator == address(this),
-            "FlashBorrower: Untrusted loan initiator"
+            _initiator == address(this),
+            "JoeFlashloanBorrower: Untrusted loan initiator"
         );
         (address borrowToken, uint256 borrowAmount) = abi.decode(
-            data,
+            _data,
             (address, uint256)
         );
         require(
-            borrowToken == token,
-            "encoded data (borrowToken) does not match"
+            borrowToken == _underlyingToken,
+            "JoeFlashloanBorrower: Encoded data (borrowToken) does not match"
         );
         require(
-            borrowAmount == amount,
-            "encoded data (borrowAmount) does not match"
+            borrowAmount == _amount,
+            "JoeFlashloanBorrower: Encoded data (borrowAmount) does not match"
         );
-        ERC20(token).approve(msg.sender, amount + fee);
+        ERC20(_underlyingToken).approve(msg.sender, _amount + _fee);
         // your logic is written here...
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }

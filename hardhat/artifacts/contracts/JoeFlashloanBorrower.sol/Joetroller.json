@@ -1,13 +1,13 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "Comptroller",
+  "contractName": "Joetroller",
   "sourceName": "contracts/JoeFlashloanBorrower.sol",
   "abi": [
     {
       "inputs": [
         {
           "internalType": "address",
-          "name": "cTokenAddress",
+          "name": "jTokenAddress",
           "type": "address"
         }
       ],

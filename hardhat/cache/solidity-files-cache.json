@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeFlashloanBorrower.sol": {
-      "lastModificationDate": 1640021697476,
-      "contentHash": "c9a8b3aa28ad2ac94717b477c6209ba5",
+      "lastModificationDate": 1640030390393,
+      "contentHash": "77afbd310f6401b195fa6f3c7e4aafc6",
       "sourceName": "contracts/JoeFlashloanBorrower.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -65,15 +65,16 @@
       },
       "imports": [
         "./ERC3156FlashLenderInterface.sol",
-        "./ERC3156FlashBorrowerInterface.sol"
+        "./ERC3156FlashBorrowerInterface.sol",
+        "./JWrappedNative.sol"
       ],
       "versionPragmas": [
         "^0.8.3"
       ],
       "artifacts": [
-        "Comptroller",
         "ERC20",
-        "JoeFlashloanBorrower"
+        "JoeFlashloanBorrower",
+        "Joetroller"
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/ERC3156FlashLenderInterface.sol": {
@@ -111,6 +112,44 @@
       ],
       "artifacts": [
         "ERC3156FlashLenderInterface"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JWrappedNative.sol": {
+      "lastModificationDate": 1640023284939,
+      "contentHash": "1ee12853c3ad5fcaf3bc8b5664104ec7",
+      "sourceName": "contracts/JWrappedNative.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "JErc20Interface",
+        "JErc20Storage",
+        "JWrappedNative",
+        "JWrappedNativeInterface"
       ]
     }
   }
