@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import "./ERC3156FlashLenderInterface.sol";
 import "./ERC3156FlashBorrowerInterface.sol";
+import "./ERC3156FlashLenderInterface.sol";
 import "./JWrappedNative.sol";
+import "./libraries/SafeMath.sol";
 
 interface Joetroller {
     function isMarketListed(address jTokenAddress) external view returns (bool);
@@ -14,6 +15,8 @@ interface ERC20 {
 }
 
 contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
+    using SafeMath for uint256;
+
     /**
      * @notice Joetroller address
      */
@@ -79,7 +82,7 @@ contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
             borrowAmount == _amount,
             "JoeFlashloanBorrower: Encoded data (borrowAmount) does not match"
         );
-        ERC20(_underlyingToken).approve(msg.sender, _amount + _fee);
+        ERC20(_underlyingToken).approve(msg.sender, _amount.add(_fee));
         // your logic is written here...
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
