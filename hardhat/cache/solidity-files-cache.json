@@ -1,0 +1,117 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/ERC3156FlashBorrowerInterface.sol": {
+      "lastModificationDate": 1640021720681,
+      "contentHash": "c15b9ca7b4661dcd9c6a95dc8958e563",
+      "sourceName": "contracts/ERC3156FlashBorrowerInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "ERC3156FlashBorrowerInterface"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeFlashloanBorrower.sol": {
+      "lastModificationDate": 1640021697476,
+      "contentHash": "c9a8b3aa28ad2ac94717b477c6209ba5",
+      "sourceName": "contracts/JoeFlashloanBorrower.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ERC3156FlashLenderInterface.sol",
+        "./ERC3156FlashBorrowerInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "Comptroller",
+        "ERC20",
+        "JoeFlashloanBorrower"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/ERC3156FlashLenderInterface.sol": {
+      "lastModificationDate": 1640021729067,
+      "contentHash": "ceb263f906a943c1e2b5c2717dd8e3a3",
+      "sourceName": "contracts/ERC3156FlashLenderInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ERC3156FlashBorrowerInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "ERC3156FlashLenderInterface"
+      ]
+    }
+  }
+}
