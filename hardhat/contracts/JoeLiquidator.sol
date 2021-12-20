@@ -41,11 +41,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 _borrowAmount,
         address _borrowerToLiquidate
     ) external {
-        address underlyingToken = JWrappedNative(_jBorrowToken).underlying();
+        address underlyingToken = JCollateralCapErc20(_jBorrowToken)
+            .underlying();
         bytes memory data = abi.encode(
             underlyingToken,
             _borrowAmount,
-            _borrowerToLiquidate
+            _borrowerToLiquidate,
+            _jBorrowToken
         );
         ERC3156FlashLenderInterface(_flashloanLender).flashLoan(
             this,
@@ -81,8 +83,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         (
             address borrowToken,
             uint256 borrowAmount,
-            address borrowerToLiquidate
-        ) = abi.decode(_data, (address, uint256, address));
+            address borrowerToLiquidate,
+            address jBorrowToken
+        ) = abi.decode(_data, (address, uint256, address, address));
         require(
             borrowToken == _underlyingToken,
             "JoeLiquidator: Encoded data (borrowToken) does not match"
@@ -92,7 +95,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             "JoeLiquidator: Encoded data (borrowAmount) does not match"
         );
         ERC20(_underlyingToken).approve(msg.sender, _amount.add(_fee));
+
         // your logic is written here...
+        performLiquidation(
+            borrowerToLiquidate,
+            borrowAmount,
+            JTokenInterface(jBorrowToken)
+        );
+
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
 
