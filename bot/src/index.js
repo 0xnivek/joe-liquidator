@@ -46,22 +46,13 @@ const getSupplyValueInUSD = (token) => {
   return parseFloat(supplyBalanceUnderlyingStr) * parseFloat(underlyingPriceUSDStr);
 }
 
-const findBorrowPositionToRepay = (tokens) => {
-  for (token of tokens) {
-    const borrowValue = getBorrowValueInUSD(token);
-    if (borrowValue > 0) {
-      return token;
-    }
-  }
-}
+const findSupplyPositionToSeize = (tokens, borrowId, borrowValue) => {
+  for (const token of tokens) {
+    const { enteredMarket, id: supplyId } = token;
 
-const findSupplyPositionToSeize = (tokens, borrowPositionToRepay) => {
-  const borrowValue = getBorrowValueInUSD(borrowPositionToRepay);
-  for (token of tokens) {
-    const { enteredMarket } = token;
-
-    // Need to have `enteredMarket` to have been posted as collateral
-    if (!enteredMarket) {
+    // 1. Need to have `enteredMarket` to have been posted as collateral
+    // 2. Borrow and supply position can't be the same token
+    if (!enteredMarket || borrowId === supplyId) {
       continue;
     }
 
@@ -71,6 +62,21 @@ const findSupplyPositionToSeize = (tokens, borrowPositionToRepay) => {
       return token;
     }
   }
+  return null;
+}
+
+const findBorrowAndSupplyPosition = (tokens) => {
+  for (const token of tokens) {
+    const { id: borrowId } = token;
+    const borrowValue = getBorrowValueInUSD(token);
+    if (borrowValue > 0) {
+      const supplyPositionToSeize = findSupplyPositionToSeize(tokens, borrowId, borrowValue);
+      if (supplyPositionToSeize !== null) {
+        return { borrowPositionToRepay: token, supplyPositionToSeize };
+      }
+    }
+  }
+  return null;
 }
 
 client.query(UNDERWATER_ACCOUNTS_QUERY)
@@ -84,9 +90,9 @@ client.query(UNDERWATER_ACCOUNTS_QUERY)
     const { totalBorrowValueInUSD, totalCollateralValueInUSD, tokens } = account;
     console.log("totalBorrowValueInUSD:", totalBorrowValueInUSD);
     console.log("totalCollateralValueInUSD:", totalCollateralValueInUSD);
-    console.log("TOKENS:", tokens);
-    const borrowPositionToRepay = findBorrowPositionToRepay(tokens);
-    const supplyPositionToSeize = findSupplyPositionToSeize(tokens, borrowPositionToRepay)
+    // console.log("TOKENS:", tokens);
+
+    const { borrowPositionToRepay, supplyPositionToSeize } = findBorrowAndSupplyPosition(tokens)
     console.log("BORROW POSITION TO REPAY:", borrowPositionToRepay);
     console.log("SUPPLY POSITION TO SEIZE:", supplyPositionToSeize);
   })
