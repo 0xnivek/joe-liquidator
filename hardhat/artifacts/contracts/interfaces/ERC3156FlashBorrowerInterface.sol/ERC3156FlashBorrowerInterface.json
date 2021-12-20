@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "ERC3156FlashBorrowerInterface",
-  "sourceName": "contracts/ERC3156FlashBorrowerInterface.sol",
+  "sourceName": "contracts/interfaces/ERC3156FlashBorrowerInterface.sol",
   "abi": [
     {
       "inputs": [

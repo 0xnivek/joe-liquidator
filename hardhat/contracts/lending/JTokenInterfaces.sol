@@ -8,8 +8,6 @@ contract JErc20Storage {
     address public underlying;
 }
 
-contract JErc20Interface is JErc20Storage {}
+contract JWrappedNative is JErc20Storage {}
 
-contract JWrappedNativeInterface is JErc20Interface {}
-
-contract JWrappedNative is JWrappedNativeInterface {}
+contract JCollateralCapErc20 is JErc20Storage {}

@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "ERC3156FlashLenderInterface",
-  "sourceName": "contracts/ERC3156FlashLenderInterface.sol",
+  "sourceName": "contracts/interfaces/ERC3156FlashLenderInterface.sol",
   "abi": [
     {
       "inputs": [

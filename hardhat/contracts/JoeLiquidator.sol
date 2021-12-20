@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import "./ERC3156FlashBorrowerInterface.sol";
-import "./ERC3156FlashLenderInterface.sol";
-import "./JWrappedNative.sol";
+import "./interfaces/ERC3156FlashBorrowerInterface.sol";
+import "./interfaces/ERC3156FlashLenderInterface.sol";
+import "./lending/JTokenInterfaces.sol";
 import "./libraries/SafeMath.sol";
 
 interface Joetroller {
     function isMarketListed(address jTokenAddress) external view returns (bool);
 }
+
+interface JTokenInterface {}
 
 interface ERC20 {
     function approve(address spender, uint256 amount) external;
@@ -93,4 +95,17 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         // your logic is written here...
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
+
+    /**
+     * @notice The sender liquidates the borrowers collateral.
+     * The collateral seized is transferred to the liquidator.
+     * @param _borrowerToLiquidate The borrower of this jToken to be liquidated
+     * @param _repayAmount The amount of the underlying borrowed asset to repay
+     * @param _jTokenCollateral The market in which to seize collateral from the borrower
+     */
+    function performLiquidation(
+        address _borrowerToLiquidate,
+        uint256 _repayAmount,
+        JTokenInterface _jTokenCollateral
+    ) internal {}
 }

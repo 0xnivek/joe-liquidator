@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "ERC20",
-  "sourceName": "contracts/JoeFlashloanBorrower.sol",
+  "sourceName": "contracts/JoeLiquidator.sol",
   "abi": [
     {
       "inputs": [

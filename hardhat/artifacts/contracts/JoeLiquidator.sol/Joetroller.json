@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "Joetroller",
-  "sourceName": "contracts/JoeFlashloanBorrower.sol",
+  "sourceName": "contracts/JoeLiquidator.sol",
   "abi": [
     {
       "inputs": [
