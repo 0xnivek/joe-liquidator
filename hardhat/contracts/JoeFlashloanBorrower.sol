@@ -3,6 +3,7 @@ pragma solidity ^0.8.3;
 
 import "./ERC3156FlashLenderInterface.sol";
 import "./ERC3156FlashBorrowerInterface.sol";
+import "./JWrappedNative.sol";
 
 interface Comptroller {
     function isMarketListed(address cTokenAddress) external view returns (bool);
@@ -24,15 +25,15 @@ contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
     }
 
     function doFlashloan(
-        address flashloanLender,
-        address borrowToken,
-        uint256 borrowAmount
+        address _flashloanLender,
+        address _jBorrowToken,
+        uint256 _borrowAmount
     ) external {
-        bytes memory data = abi.encode(borrowToken, borrowAmount);
-        ERC3156FlashLenderInterface(flashloanLender).flashLoan(
+        bytes memory data = abi.encode(_jBorrowToken, _borrowAmount);
+        ERC3156FlashLenderInterface(_flashloanLender).flashLoan(
             this,
-            borrowToken,
-            borrowAmount,
+            JWrappedNative(_jBorrowToken).underlying(),
+            _borrowAmount,
             data
         );
     }
