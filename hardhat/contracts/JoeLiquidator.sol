@@ -14,7 +14,7 @@ interface ERC20 {
     function approve(address spender, uint256 amount) external;
 }
 
-contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
+contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     using SafeMath for uint256;
 
     /**
@@ -64,11 +64,11 @@ contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
     ) external override returns (bytes32) {
         require(
             Joetroller(joetroller).isMarketListed(msg.sender),
-            "JoeFlashloanBorrower: Untrusted message sender"
+            "JoeLiquidator: Untrusted message sender"
         );
         require(
             _initiator == address(this),
-            "JoeFlashloanBorrower: Untrusted loan initiator"
+            "JoeLiquidator: Untrusted loan initiator"
         );
         (address borrowToken, uint256 borrowAmount) = abi.decode(
             _data,
@@ -76,11 +76,11 @@ contract JoeFlashloanBorrower is ERC3156FlashBorrowerInterface {
         );
         require(
             borrowToken == _underlyingToken,
-            "JoeFlashloanBorrower: Encoded data (borrowToken) does not match"
+            "JoeLiquidator: Encoded data (borrowToken) does not match"
         );
         require(
             borrowAmount == _amount,
-            "JoeFlashloanBorrower: Encoded data (borrowAmount) does not match"
+            "JoeLiquidator: Encoded data (borrowAmount) does not match"
         );
         ERC20(_underlyingToken).approve(msg.sender, _amount.add(_fee));
         // your logic is written here...
