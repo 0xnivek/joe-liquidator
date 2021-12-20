@@ -31,14 +31,20 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _flashloanLender The address of the FlashloanLender contract
      * @param _jBorrowToken The address of the jToken contract to borrow from
      * @param _borrowAmount The amount of the tokens to borrow
+     * @param _borrowerToLiquidate The address of the borrower to liquidate
      */
     function doFlashloan(
         address _flashloanLender,
         address _jBorrowToken,
-        uint256 _borrowAmount
+        uint256 _borrowAmount,
+        address _borrowerToLiquidate
     ) external {
         address underlyingToken = JWrappedNative(_jBorrowToken).underlying();
-        bytes memory data = abi.encode(underlyingToken, _borrowAmount);
+        bytes memory data = abi.encode(
+            underlyingToken,
+            _borrowAmount,
+            _borrowerToLiquidate
+        );
         ERC3156FlashLenderInterface(_flashloanLender).flashLoan(
             this,
             underlyingToken,
@@ -70,10 +76,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             _initiator == address(this),
             "JoeLiquidator: Untrusted loan initiator"
         );
-        (address borrowToken, uint256 borrowAmount) = abi.decode(
-            _data,
-            (address, uint256)
-        );
+        (
+            address borrowToken,
+            uint256 borrowAmount,
+            address borrowerToLiquidate
+        ) = abi.decode(_data, (address, uint256, address));
         require(
             borrowToken == _underlyingToken,
             "JoeLiquidator: Encoded data (borrowToken) does not match"
