@@ -3,18 +3,9 @@ pragma solidity ^0.8.3;
 
 import "./interfaces/ERC3156FlashBorrowerInterface.sol";
 import "./interfaces/ERC3156FlashLenderInterface.sol";
+import "./interfaces/ERC20Interface.sol";
 import "./lending/JTokenInterfaces.sol";
 import "./libraries/SafeMath.sol";
-
-interface Joetroller {
-    function isMarketListed(address jTokenAddress) external view returns (bool);
-}
-
-interface JTokenInterface {}
-
-interface ERC20 {
-    function approve(address spender, uint256 amount) external;
-}
 
 contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     using SafeMath for uint256;
