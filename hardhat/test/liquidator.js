@@ -63,17 +63,15 @@ describe("JoeLiquidator", function () {
     [owner, addr1, addr2] = await ethers.getSigners();
   });
 
-  describe("Test getAmountOfWAVAXToFlashLoan", function () {
-    it("Swap WAVAX to MIM", async function () {
-      // const joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
-      // 10**12 decimals?
-      // console.log(await joeRouterContract.getAmountsIn(1, [USDCE, WAVAX]));
-      // Assuming the borrow position to repay is 1000 MIM, we
-      // expect to have to borrow 8.78415 WAVAX
+  describe("Test getAmountOfUSDCEToFlashLoan", function () {
+    it("Calculate amount of USDC.e needed for 100 Link.e", async function () {
+      // Assuming the borrow position to repay is 100 Link.e, we
+      // expect to have to borrow 1905.81 USDC.e
+      // ethers.utils.parseUnits("121.0", 9) => { BigNumber: "121000000000" }
       console.log(
-        await joeLiquidatorContract.connect(owner).getAmountOfWAVAXToFlashLoan(
-          joeLiquidatorContract.MIM(),
-          1000
+        await joeLiquidatorContract.connect(owner).getAmountOfUSDCEToFlashLoan(
+          joeLiquidatorContract.LINKE(),
+          ethers.utils.parseEther("100")
         )
       );
     });
