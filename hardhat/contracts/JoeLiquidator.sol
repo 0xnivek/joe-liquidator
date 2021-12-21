@@ -46,36 +46,35 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _jBorrowToken The address of the jToken contract to borrow from
      * @param _borrowAmount The amount of the tokens to borrow
      * @param _borrowerToLiquidate The address of the borrower to liquidate
-     * @param _isUSDC Indicates whether the borrow position to repay is in USDC
+     * @param _isBorrowTokenUSDC Indicates whether the borrow position to repay is in USDC
      */
     function doFlashloan(
-        address _flashloanLender,
         address _jBorrowToken,
         uint256 _borrowAmount,
         address _borrowerToLiquidate,
-        bool _isUSDC
+        bool _isBorrowTokenUSDC
     ) external {
-        address tokenToFlashLoan;
-        if (_isUSDC) {
-            tokenToFlashLoan = jWETHEAddress;
-        } else {
-            tokenToFlashLoan = jUSDCEAddress;
-        }
-
-        address underlyingToken = JCollateralCapErc20(_jBorrowToken)
-            .underlying();
-        bytes memory data = abi.encode(
-            underlyingToken,
-            _borrowAmount,
-            _borrowerToLiquidate,
+        address underlyingBorrowToken = JCollateralCapErc20Interface(
             _jBorrowToken
+        ).underlying();
+
+        JCollateralCapErc20Interface jTokenToFlashLoan = _getJTokenToFlashLoan(
+            _isBorrowTokenUSDC
         );
-        ERC3156FlashLenderInterface(_flashloanLender).flashLoan(
-            this,
-            underlyingToken,
+        uint256 amountToFlashLoan = _getAmountToFlashLoan(
+            underlyingBorrowToken,
             _borrowAmount,
-            data
+            _isBorrowTokenUSDC
         );
+
+        bytes memory data = abi.encode(
+            msg.sender, // initiator
+            _borrowerToLiquidate, // borrowerToLiquidate
+            jTokenToFlashLoan.underlying(), // underlyingTokenToFlashLoan
+            amountToFlashLoan // amountToFlashLoan
+        );
+
+        jTokenToFlashLoan.flashLoan(this, msg.sender, amountToFlashLoan, data);
     }
 
     /**
@@ -97,32 +96,34 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             Joetroller(joetrollerAddress).isMarketListed(msg.sender),
             "JoeLiquidator: Untrusted message sender"
         );
+
+        (
+            address initiator,
+            address borrowerToLiquidate,
+            address underlyingTokenToFlashLoan,
+            uint256 amountToFlashLoan
+        ) = abi.decode(_data, (address, address, address, uint256));
+
         require(
-            _initiator == address(this),
+            _initiator == initiator,
             "JoeLiquidator: Untrusted loan initiator"
         );
-        (
-            address borrowToken,
-            uint256 borrowAmount,
-            address borrowerToLiquidate,
-            address jBorrowToken
-        ) = abi.decode(_data, (address, uint256, address, address));
         require(
-            borrowToken == _underlyingToken,
-            "JoeLiquidator: Encoded data (borrowToken) does not match"
+            _underlyingToken == underlyingTokenToFlashLoan,
+            "JoeLiquidator: Encoded data (underlyingTokenToFlashLoan) does not match"
         );
         require(
-            borrowAmount == _amount,
-            "JoeLiquidator: Encoded data (borrowAmount) does not match"
+            _amount == amountToFlashLoan,
+            "JoeLiquidator: Encoded data (amountToFlashLoan) does not match"
         );
         ERC20(_underlyingToken).approve(msg.sender, _amount.add(_fee));
 
         // your logic is written here...
-        performLiquidation(
-            borrowerToLiquidate,
-            borrowAmount,
-            JTokenInterface(jBorrowToken)
-        );
+        // _performLiquidation(
+        //     borrowerToLiquidate,
+        //     borrowAmount,
+        //     JTokenInterface(jBorrowToken)
+        // );
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
@@ -134,20 +135,39 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _repayAmount The amount of the underlying borrowed asset to repay
      * @param _jTokenCollateral The market in which to seize collateral from the borrower
      */
-    function performLiquidation(
+    function _performLiquidation(
         address _borrowerToLiquidate,
         uint256 _repayAmount,
         JTokenInterface _jTokenCollateral
     ) internal {}
 
-    function getAmountOfUSDCEToFlashLoan(
+    function _getJTokenToFlashLoan(bool _isBorrowTokenUSDC)
+        internal
+        view
+        returns (JCollateralCapErc20Interface)
+    {
+        if (_isBorrowTokenUSDC) {
+            return JCollateralCapErc20Interface(jWETHEAddress);
+        } else {
+            return JCollateralCapErc20Interface(jUSDCEAddress);
+        }
+    }
+
+    function _getAmountToFlashLoan(
         address _underlyingBorrowToken,
-        uint256 _borrowAmount
-    ) public view returns (uint256[] memory amounts) {
+        uint256 _borrowAmount,
+        bool _isBorrowTokenUSDC
+    ) internal view returns (uint256) {
         address[] memory path = new address[](2);
-        path[0] = USDCE;
+        if (_isBorrowTokenUSDC) {
+            path[0] = WETHE;
+        } else {
+            path[0] = USDCE;
+        }
         path[1] = _underlyingBorrowToken;
         return
-            JoeRouter02(joeRouter02Address).getAmountsIn(_borrowAmount, path);
+            JoeRouter02(joeRouter02Address).getAmountsIn(_borrowAmount, path)[
+                0
+            ];
     }
 }
