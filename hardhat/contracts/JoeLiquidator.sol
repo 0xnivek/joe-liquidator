@@ -42,28 +42,27 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
     /**
      * @notice Perform flash loan for given jToken and amount
-     * @param _flashloanLender The address of the FlashloanLender contract
-     * @param _jBorrowToken The address of the jToken contract to borrow from
+     * @param _jBorrowTokenAddress The address of the jToken contract to borrow from
      * @param _borrowAmount The amount of the tokens to borrow
      * @param _borrowerToLiquidate The address of the borrower to liquidate
      * @param _isBorrowTokenUSDC Indicates whether the borrow position to repay is in USDC
      */
     function doFlashloan(
-        address _jBorrowToken,
+        address _jBorrowTokenAddress,
         uint256 _borrowAmount,
         address _borrowerToLiquidate,
         bool _isBorrowTokenUSDC
     ) external {
         address underlyingBorrowToken = JCollateralCapErc20Interface(
-            _jBorrowToken
+            _jBorrowTokenAddress
         ).underlying();
-
-        JCollateralCapErc20Interface jTokenToFlashLoan = _getJTokenToFlashLoan(
-            _isBorrowTokenUSDC
-        );
         uint256 amountToFlashLoan = _getAmountToFlashLoan(
             underlyingBorrowToken,
             _borrowAmount,
+            _isBorrowTokenUSDC
+        );
+
+        JCollateralCapErc20Interface jTokenToFlashLoan = _getJTokenToFlashLoan(
             _isBorrowTokenUSDC
         );
 
@@ -116,6 +115,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             _amount == amountToFlashLoan,
             "JoeLiquidator: Encoded data (amountToFlashLoan) does not match"
         );
+
+        // Approve flash loan lender to retrieve loan amount + fee from us
         ERC20(_underlyingToken).approve(msg.sender, _amount.add(_fee));
 
         // your logic is written here...
