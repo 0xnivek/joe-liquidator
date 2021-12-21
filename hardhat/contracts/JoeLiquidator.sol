@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
+import "./interfaces/ERC20Interface.sol";
 import "./interfaces/ERC3156FlashBorrowerInterface.sol";
 import "./interfaces/ERC3156FlashLenderInterface.sol";
-import "./interfaces/ERC20Interface.sol";
 import "./lending/JTokenInterfaces.sol";
+import "./lending/JoeRouter02.sol";
 import "./libraries/SafeMath.sol";
 
 contract JoeLiquidator is ERC3156FlashBorrowerInterface {
@@ -14,6 +15,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @notice Joetroller address
      */
     address public joetrollerAddress;
+    address public joeRouter02Address;
     address public jUSDCEAddress;
     address public jWETHEAddress;
 
@@ -28,10 +30,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
     constructor(
         address _joetrollerAddress,
+        address _joeRouter02Address,
         address _jUSDCEAddress,
         address _jWETHEAddress
     ) {
         joetrollerAddress = _joetrollerAddress;
+        joeRouter02Address = _joeRouter02Address;
         jUSDCEAddress = _jUSDCEAddress;
         jWETHEAddress = _jWETHEAddress;
     }
