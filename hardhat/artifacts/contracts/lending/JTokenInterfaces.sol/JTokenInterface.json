@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "JTokenInterface",
-  "sourceName": "contracts/JoeLiquidator.sol",
+  "sourceName": "contracts/lending/JTokenInterfaces.sol",
   "abi": [],
   "bytecode": "0x",
   "deployedBytecode": "0x",

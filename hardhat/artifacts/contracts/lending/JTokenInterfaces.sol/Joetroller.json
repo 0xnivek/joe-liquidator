@@ -1,24 +1,25 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ERC20",
-  "sourceName": "contracts/JoeLiquidator.sol",
+  "contractName": "Joetroller",
+  "sourceName": "contracts/lending/JTokenInterfaces.sol",
   "abi": [
     {
       "inputs": [
         {
           "internalType": "address",
-          "name": "spender",
+          "name": "jTokenAddress",
           "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
         }
       ],
-      "name": "approve",
-      "outputs": [],
-      "stateMutability": "nonpayable",
+      "name": "isMarketListed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     }
   ],

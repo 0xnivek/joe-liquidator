@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640042797992,
-      "contentHash": "dd53d8b026af790737d910c5e9f4f40d",
+      "lastModificationDate": 1640053375465,
+      "contentHash": "3306ef7def0d375ee1c4e2be3672fadf",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -64,19 +64,18 @@
         }
       },
       "imports": [
+        "./interfaces/ERC20Interface.sol",
         "./interfaces/ERC3156FlashBorrowerInterface.sol",
         "./interfaces/ERC3156FlashLenderInterface.sol",
         "./lending/JTokenInterfaces.sol",
+        "./lending/JoeRouter02.sol",
         "./libraries/SafeMath.sol"
       ],
       "versionPragmas": [
         "^0.8.3"
       ],
       "artifacts": [
-        "ERC20",
-        "JTokenInterface",
-        "JoeLiquidator",
-        "Joetroller"
+        "JoeLiquidator"
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/ERC3156FlashLenderInterface.sol": {
@@ -117,8 +116,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640042781053,
-      "contentHash": "def7f160254e5fc7766e5b9b2a551356",
+      "lastModificationDate": 1640043276644,
+      "contentHash": "30441a9b23544ee2ae6e78104eec2bbb",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -150,7 +149,9 @@
       "artifacts": [
         "JCollateralCapErc20",
         "JErc20Storage",
-        "JWrappedNative"
+        "JTokenInterface",
+        "JWrappedNative",
+        "Joetroller"
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/libraries/SafeMath.sol": {
@@ -186,6 +187,76 @@
       ],
       "artifacts": [
         "SafeMath"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/ERC20Interface.sol": {
+      "lastModificationDate": 1640043226622,
+      "contentHash": "83c10179ece4d8265be3de3659b3391d",
+      "sourceName": "contracts/interfaces/ERC20Interface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "ERC20"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoeRouter02.sol": {
+      "lastModificationDate": 1640052727355,
+      "contentHash": "f1c2ce2c3555d147c943d093f1b9573f",
+      "sourceName": "contracts/lending/JoeRouter02.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "JoeRouter02"
       ]
     }
   }
