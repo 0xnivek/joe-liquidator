@@ -56,7 +56,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address underlyingBorrowToken = JCollateralCapErc20Interface(
             _jBorrowTokenAddress
         ).underlying();
-        uint256 amountToFlashLoan = _getAmountToFlashLoan(
+        uint256 flashLoanAmount = _getFlashLoanAmount(
             underlyingBorrowToken,
             _borrowAmount,
             _isBorrowTokenUSDC
@@ -69,24 +69,26 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         bytes memory data = abi.encode(
             msg.sender, // initiator
             _borrowerToLiquidate, // borrowerToLiquidate
-            jTokenToFlashLoan.underlying(), // underlyingTokenToFlashLoan
-            amountToFlashLoan // amountToFlashLoan
+            jTokenToFlashLoan.underlying(), // flashLoanedTokenAddress
+            _jBorrowTokenAddress, // jBorrowTokenAddress
+            flashLoanAmount, // flashLoanAmount
+            _borrowAmount // borrowAmount
         );
 
-        jTokenToFlashLoan.flashLoan(this, msg.sender, amountToFlashLoan, data);
+        jTokenToFlashLoan.flashLoan(this, msg.sender, flashLoanAmount, data);
     }
 
     /**
      * @notice Called by FlashLoanLender once flashloan is approved
      * @param _initiator The address that initiated this flash loan
-     * @param _underlyingToken The address of the underlying token contract borrowed from
+     * @param _token The address of the underlying token contract borrowed from
      * @param _amount The amount of the tokens borrowed
      * @param _fee The fee for this flash loan
      * @param _data The encoded data used for this flash loan
      */
     function onFlashLoan(
         address _initiator,
-        address _underlyingToken,
+        address _token,
         uint256 _amount,
         uint256 _fee,
         bytes calldata _data
@@ -99,27 +101,51 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         (
             address initiator,
             address borrowerToLiquidate,
-            address underlyingTokenToFlashLoan,
-            uint256 amountToFlashLoan
-        ) = abi.decode(_data, (address, address, address, uint256));
+            address flashLoanedTokenAddress,
+            address jBorrowTokenAddress,
+            uint256 flashLoanAmount,
+            uint256 borrowAmount
+        ) = abi.decode(
+                _data,
+                (address, address, address, address, uint256, uint256)
+            );
 
         require(
             _initiator == initiator,
             "JoeLiquidator: Untrusted loan initiator"
         );
         require(
-            _underlyingToken == underlyingTokenToFlashLoan,
-            "JoeLiquidator: Encoded data (underlyingTokenToFlashLoan) does not match"
+            _token == flashLoanedTokenAddress,
+            "JoeLiquidator: Encoded data (flashLoanedTokenAddress) does not match"
         );
         require(
-            _amount == amountToFlashLoan,
-            "JoeLiquidator: Encoded data (amountToFlashLoan) does not match"
+            _amount == flashLoanAmount,
+            "JoeLiquidator: Encoded data (flashLoanAmount) does not match"
         );
 
         // Approve flash loan lender to retrieve loan amount + fee from us
-        ERC20(_underlyingToken).approve(msg.sender, _amount.add(_fee));
+        ERC20 flashLoanedToken = ERC20(flashLoanedTokenAddress);
+        flashLoanedToken.approve(msg.sender, _amount.add(_fee));
 
         // your logic is written here...
+        JCollateralCapErc20Interface jBorrowToken = JCollateralCapErc20Interface(
+                jBorrowTokenAddress
+            );
+        address jBorrowTokenUnderlying = jBorrowToken.underlying();
+        // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
+        flashLoanedToken.approve(joeRouter02Address, flashLoanAmount);
+
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = flashLoanedTokenAddress;
+        swapPath[1] = jBorrowTokenUnderlying;
+        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+            flashLoanAmount, // amountIn
+            borrowAmount, // amountOutMin
+            swapPath, // path
+            jBorrowTokenUnderlying, // to
+            block.timestamp // deadline
+        );
+
         // _performLiquidation(
         //     borrowerToLiquidate,
         //     borrowAmount,
@@ -154,7 +180,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         }
     }
 
-    function _getAmountToFlashLoan(
+    function _getFlashLoanAmount(
         address _underlyingBorrowToken,
         uint256 _borrowAmount,
         bool _isBorrowTokenUSDC
