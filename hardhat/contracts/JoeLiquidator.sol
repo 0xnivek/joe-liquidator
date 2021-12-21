@@ -13,10 +13,18 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     /**
      * @notice Joetroller address
      */
-    address public joetroller;
+    address public joetrollerAddress;
+    address public jUSDCAddress;
+    address public jWETHAddress;
 
-    constructor(address _joetroller) {
-        joetroller = _joetroller;
+    constructor(
+        address _joetrollerAddress,
+        address _jUSDCAddress,
+        address _jWETHAddress
+    ) {
+        joetrollerAddress = _joetrollerAddress;
+        jUSDCAddress = _jUSDCAddress;
+        jWETHAddress = _jWETHAddress;
     }
 
     /**
@@ -25,13 +33,22 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _jBorrowToken The address of the jToken contract to borrow from
      * @param _borrowAmount The amount of the tokens to borrow
      * @param _borrowerToLiquidate The address of the borrower to liquidate
+     * @param _isUSDC Indicates whether the borrow position to repay is in USDC
      */
     function doFlashloan(
         address _flashloanLender,
         address _jBorrowToken,
         uint256 _borrowAmount,
-        address _borrowerToLiquidate
+        address _borrowerToLiquidate,
+        bool _isUSDC
     ) external {
+        address tokenToFlashLoan;
+        if (_isUSDC) {
+            tokenToFlashLoan = jWETHAddress;
+        } else {
+            tokenToFlashLoan = jUSDCAddress;
+        }
+
         address underlyingToken = JCollateralCapErc20(_jBorrowToken)
             .underlying();
         bytes memory data = abi.encode(
@@ -64,7 +81,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         bytes calldata _data
     ) external override returns (bytes32) {
         require(
-            Joetroller(joetroller).isMarketListed(msg.sender),
+            Joetroller(joetrollerAddress).isMarketListed(msg.sender),
             "JoeLiquidator: Untrusted message sender"
         );
         require(
