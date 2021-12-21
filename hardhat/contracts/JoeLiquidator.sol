@@ -140,10 +140,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         JTokenInterface _jTokenCollateral
     ) internal {}
 
-    function getAmountOfUSDCToFlashLoan(
+    function getAmountOfUSDCEToFlashLoan(
         address _underlyingBorrowToken,
         uint256 _borrowAmount
-    ) internal returns (uint256[] memory amounts) {
+    ) public view returns (uint256[] memory amounts) {
         address[] memory path = new address[](2);
         path[0] = USDCE;
         path[1] = _underlyingBorrowToken;
