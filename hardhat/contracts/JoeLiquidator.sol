@@ -14,17 +14,26 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @notice Joetroller address
      */
     address public joetrollerAddress;
-    address public jUSDCAddress;
-    address public jWETHAddress;
+    address public jUSDCEAddress;
+    address public jWETHEAddress;
+
+    address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
+    address public constant WETHE = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
+    address public constant WBTCE = 0x50b7545627a5162F82A992c33b87aDc75187B218;
+    address public constant USDCE = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
+    address public constant USDTE = 0xc7198437980c041c805A1EDcbA50c1Ce5db95118;
+    address public constant DAIE = 0xd586E7F844cEa2F87f50152665BCbc2C279D8d70;
+    address public constant LINKE = 0x5947BB275c521040051D82396192181b413227A3;
+    address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
 
     constructor(
         address _joetrollerAddress,
-        address _jUSDCAddress,
-        address _jWETHAddress
+        address _jUSDCEAddress,
+        address _jWETHEAddress
     ) {
         joetrollerAddress = _joetrollerAddress;
-        jUSDCAddress = _jUSDCAddress;
-        jWETHAddress = _jWETHAddress;
+        jUSDCEAddress = _jUSDCEAddress;
+        jWETHEAddress = _jWETHEAddress;
     }
 
     /**
@@ -44,9 +53,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     ) external {
         address tokenToFlashLoan;
         if (_isUSDC) {
-            tokenToFlashLoan = jWETHAddress;
+            tokenToFlashLoan = jWETHEAddress;
         } else {
-            tokenToFlashLoan = jUSDCAddress;
+            tokenToFlashLoan = jUSDCEAddress;
         }
 
         address underlyingToken = JCollateralCapErc20(_jBorrowToken)
