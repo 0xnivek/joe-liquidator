@@ -16,7 +16,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      */
     address public joetrollerAddress;
     address public joeRouter02Address;
-    address public jUSDCEAddress;
+    address public jWAVAXAddress;
     address public jWETHEAddress;
 
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
@@ -31,12 +31,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     constructor(
         address _joetrollerAddress,
         address _joeRouter02Address,
-        address _jUSDCEAddress,
+        address _jWAVAXAddress,
         address _jWETHEAddress
     ) {
         joetrollerAddress = _joetrollerAddress;
         joeRouter02Address = _joeRouter02Address;
-        jUSDCEAddress = _jUSDCEAddress;
+        jWAVAXAddress = _jWAVAXAddress;
         jWETHEAddress = _jWETHEAddress;
     }
 
@@ -59,7 +59,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         if (_isUSDC) {
             tokenToFlashLoan = jWETHEAddress;
         } else {
-            tokenToFlashLoan = jUSDCEAddress;
+            tokenToFlashLoan = jWAVAXAddress;
         }
 
         address underlyingToken = JCollateralCapErc20(_jBorrowToken)
@@ -140,12 +140,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         JTokenInterface _jTokenCollateral
     ) internal {}
 
-    function getAmountOfUSDCEToFlashLoan(
+    function getAmountOfWAVAXToFlashLoan(
         address _underlyingBorrowToken,
         uint256 _borrowAmount
     ) public view returns (uint256[] memory amounts) {
         address[] memory path = new address[](2);
-        path[0] = USDCE;
+        path[0] = WAVAX;
         path[1] = _underlyingBorrowToken;
         return
             JoeRouter02(joeRouter02Address).getAmountsIn(_borrowAmount, path);

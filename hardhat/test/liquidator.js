@@ -19,8 +19,9 @@ use(solidity);
 const ONLY_OWNER_ERROR_MSG = "Ownable: caller is not the owner";
 const JOETROLLER_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
 const JOE_ROUTER_02_ADDRESS = "0x60aE616a2155Ee3d9A68541Ba4544862310933d4";
-const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
+const JWAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
 const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
+const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
 
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const WETHE = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
@@ -55,26 +56,26 @@ describe("JoeLiquidator", function () {
     joeLiquidatorContract = await JoeLiquidatorContractFactory.deploy(
       JOETROLLER_ADDRESS,
       JOE_ROUTER_02_ADDRESS,
-      JUSDCE_ADDRESS,
+      JWAVAX_ADDRESS,
       JWETHE_ADDRESS
     );
 
     [owner, addr1, addr2] = await ethers.getSigners();
   });
 
-  describe("Test getAmountOfUSDCEToFlashLoan", function () {
-    it("Swap WAVAX to USDCE", async function () {
-      const joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
+  describe("Test getAmountOfWAVAXToFlashLoan", function () {
+    it("Swap WAVAX to MIM", async function () {
+      // const joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
       // 10**12 decimals?
-      console.log(await joeRouterContract.getAmountsIn(1, [USDCE, WAVAX]));
-      // Assuming the borrow position to repay is 100 MIM, we
-      // expect to have to borrow 101.174 USDC.e
-      // console.log(
-      //   await joeLiquidatorContract.connect(owner).getAmountOfUSDCEToFlashLoan(
-      //     joeLiquidatorContract.WETHE(),
-      //     1
-      //   )
-      // );
+      // console.log(await joeRouterContract.getAmountsIn(1, [USDCE, WAVAX]));
+      // Assuming the borrow position to repay is 1000 MIM, we
+      // expect to have to borrow 8.78415 WAVAX
+      console.log(
+        await joeLiquidatorContract.connect(owner).getAmountOfWAVAXToFlashLoan(
+          joeLiquidatorContract.MIM(),
+          1000
+        )
+      );
     });
   });
 
