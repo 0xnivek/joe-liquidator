@@ -10,6 +10,11 @@ interface Joetroller {
 
     function isMarketListed(address jTokenAddress) external view returns (bool);
 
+    function checkMembership(address account, JToken jToken)
+        external
+        view
+        returns (bool);
+
     function getAccountLiquidity(address account)
         external
         view

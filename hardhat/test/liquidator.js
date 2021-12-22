@@ -88,11 +88,15 @@ describe("JoeLiquidator", function () {
       console.log("OWNER JAVAX BALANCE AFTER", javaxBalanceAfter);
 
       /// 2. Enter market via Joetroller for jAVAX for AVAX as collateral
+      expect(
+        await joetrollerContract
+          .checkMembership(owner.address, JAVAX_ADDRESS)
+      ).to.equal(false);
       await joetrollerContract.connect(owner).enterMarkets([JAVAX_ADDRESS])
-      // expect(
-      //   await joetrollerExtensionContract
-      //     .checkMembership(owner.address, JAVAX_ADDRESS)
-      // ).to.equal(true);
+      expect(
+        await joetrollerContract
+          .checkMembership(owner.address, JAVAX_ADDRESS)
+      ).to.equal(true);
 
       /// 3. Get account liquidity in protocol
       const [err, liquidity, shortfall] = await joetrollerContract.getAccountLiquidity(owner.address);
