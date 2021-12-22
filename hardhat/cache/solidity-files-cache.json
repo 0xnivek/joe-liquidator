@@ -302,8 +302,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoetrollerInterface.sol": {
-      "lastModificationDate": 1640200744795,
-      "contentHash": "da99385a7857c2c41b3380a33eb218b7",
+      "lastModificationDate": 1640201772044,
+      "contentHash": "6426028eaf29ce5ea37e15d47bdbec49",
       "sourceName": "contracts/lending/JoetrollerInterface.sol",
       "solcConfig": {
         "version": "0.8.4",

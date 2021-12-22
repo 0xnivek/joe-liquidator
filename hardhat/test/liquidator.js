@@ -93,6 +93,10 @@ describe("JoeLiquidator", function () {
       //   await joetrollerExtensionContract
       //     .checkMembership(owner.address, JAVAX_ADDRESS)
       // ).to.equal(true);
+
+      /// 3. Get account liquidity in protocol
+      const [err, liquidity, shortfall] = await joetrollerContract.getAccountLiquidity(owner.address);
+      console.log("LIQUIDITY:", liquidity);
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {

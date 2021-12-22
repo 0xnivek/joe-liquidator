@@ -9,6 +9,15 @@ interface Joetroller {
         returns (uint256[] memory);
 
     function isMarketListed(address jTokenAddress) external view returns (bool);
+
+    function getAccountLiquidity(address account)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        );
 }
 
 interface JoetrollerInterfaceExtension {
