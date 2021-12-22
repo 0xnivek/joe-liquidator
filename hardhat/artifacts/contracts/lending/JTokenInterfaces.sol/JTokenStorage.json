@@ -1,27 +1,8 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "JTokenInterface",
+  "contractName": "JTokenStorage",
   "sourceName": "contracts/lending/JTokenInterfaces.sol",
   "abi": [
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "name": "balanceOf",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
     {
       "inputs": [],
       "name": "totalBorrows",

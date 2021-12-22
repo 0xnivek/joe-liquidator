@@ -117,8 +117,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640147741579,
-      "contentHash": "1d621e4198e605b825338d3b369ff888",
+      "lastModificationDate": 1640198916758,
+      "contentHash": "6698aba030492b37672c0f72b19ae84e",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -154,6 +154,8 @@
         "JErc20Interface",
         "JErc20Storage",
         "JTokenInterface",
+        "JTokenStorage",
+        "JWrappedNativeDelegator",
         "JWrappedNativeInterface",
         "Joetroller"
       ]

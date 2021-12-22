@@ -19,9 +19,10 @@ use(solidity);
 const ONLY_OWNER_ERROR_MSG = "Ownable: caller is not the owner";
 const JOETROLLER_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
 const JOE_ROUTER_02_ADDRESS = "0x60aE616a2155Ee3d9A68541Ba4544862310933d4";
-const JWAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
+const JAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
 const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
 const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
+const JLINKE_ADDRESS = "0x585E7bC75089eD111b656faA7aeb1104F5b96c15";
 
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const WETHE = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
@@ -35,6 +36,8 @@ const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
 
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
+  let joeTrollerContract;
+  let jAVAXContract;
 
   let owner;
   let addr1;
@@ -56,25 +59,74 @@ describe("JoeLiquidator", function () {
     joeLiquidatorContract = await JoeLiquidatorContractFactory.deploy(
       JOETROLLER_ADDRESS,
       JOE_ROUTER_02_ADDRESS,
-      JWAVAX_ADDRESS,
+      JAVAX_ADDRESS,
       JWETHE_ADDRESS
     );
+
+    joeTrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
+    jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
 
     [owner, addr1, addr2] = await ethers.getSigners();
   });
 
-  describe("Test getAmountOfUSDCEToFlashLoan", function () {
-    it("Calculate amount of USDC.e needed for 100 Link.e", async function () {
-      // Assuming the borrow position to repay is 100 Link.e, we
-      // expect to have to borrow 1905.81 USDC.e
-      // ethers.utils.parseUnits("121.0", 9) => { BigNumber: "121000000000" }
-      console.log(
-        await joeLiquidatorContract.connect(owner).getAmountOfUSDCEToFlashLoan(
-          joeLiquidatorContract.LINKE(),
-          ethers.utils.parseEther("100")
-        )
-      );
+  describe("Test liquidation", function () {
+    // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
+    it("Supply 1 AVAX to jAVAX contract as collateral and obtain jAVAX in return", async function () {
+      const javaxBalanceBefore = await jAVAXContract.balanceOf(owner.address);
+      expect(javaxBalanceBefore).to.equal(0);
+
+      console.log("OWNER JAVAX BALANCE BEFORE", javaxBalanceBefore);
+
+      const mintNativeTxn = await jAVAXContract.connect(owner).mintNative({ value: ethers.utils.parseEther("1") });
+      await mintNativeTxn.wait()
+
+      const javaxBalanceAfter = await jAVAXContract.balanceOf(owner.address);
+      expect(javaxBalanceAfter.gt(0)).to.equal(true);
+      console.log("OWNER JAVAX BALANCE AFTER", javaxBalanceAfter);
+    });
+
+    xit("Take out loan and mine blocks until account health < 0", async function () {
+      // ~ 999 AVAX
+      // const ownerBalance = await ethers.provider.getBalance(owner.address);
+      // console.log("OWNER BALANCE:", ownerBalance);
+
+      const jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
+
+      // console.log(jLINKEContract)
+
+      // const beforeProtocolBorrows = await jLINKEContract.totalBorrows();
+      // console.log("BEFORE PROTOCOL BORROWS", beforeProtocolBorrows);
+
+      const linkEContract = await ethers.getContractAt("ERC20", LINKE);
+      const beforeOwnerBalance = await linkEContract.balanceOf(owner.address);
+      console.log("BEFORE LINKE OWNER BALANCE", beforeOwnerBalance);
+
+      // Take loan of 10 Link.e using AVAX as collateral (1 LINK.e ~= 0.168 AVAX)
+      const tenLinkE = ethers.utils.parseUnits("10", 8);
+      const borrowTxn = await jLINKEContract.connect(owner).borrow(tenLinkE);
+      console.log(await borrowTxn.wait());
+
+      // const afterProtocolBorrows = await jLINKEContract.totalBorrows();
+      // console.log("AFTER PROTOCOL BORROWS", afterProtocolBorrows);
+
+      const afterOwnerBalance = await linkEContract.balanceOf(owner.address);
+      console.log("AFTER LINKE OWNER BALANCE", afterOwnerBalance);
+
     });
   });
+
+  // describe("Test getAmountOfUSDCEToFlashLoan", function () {
+  //   it("Calculate amount of USDC.e needed for 100 Link.e", async function () {
+  //     // Assuming the borrow position to repay is 100 Link.e, we
+  //     // expect to have to borrow 1905.81 USDC.e
+  //     // ethers.utils.parseUnits("121.0", 9) => { BigNumber: "121000000000" }
+  //     console.log(
+  //       await joeLiquidatorContract.connect(owner).getAmountOfUSDCEToFlashLoan(
+  //         joeLiquidatorContract.LINKE(),
+  //         ethers.utils.parseEther("100")
+  //       )
+  //     );
+  //   });
+  // });
 
 });
