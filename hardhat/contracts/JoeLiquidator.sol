@@ -30,7 +30,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
     struct LiquidationData {
         address flashLoanedTokenAddress;
-        address jBorrowTokenAddress;
+        address jRepayTokenAddress;
         address borrowerToLiquidate;
         address jSupplyTokenAddress;
         uint256 flashLoanAmount;
@@ -51,24 +51,24 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
     /**
      * @notice Perform flash loan for given jToken and amount
-     * @param _jBorrowTokenAddress The address of the jToken contract to borrow from
+     * @param _jRepayTokenAddress The address of the jToken contract to borrow from
      * @param _repayAmount The amount of the tokens to repay
      * @param _borrowerToLiquidate The address of the borrower to liquidate
      * @param _isBorrowTokenUSDC Indicates whether the borrow position to repay is in USDC
      * @param _jSupplyTokenAddress The address of the jToken contract to seize collateral from
      */
     function doFlashloan(
-        address _jBorrowTokenAddress,
+        address _jRepayTokenAddress,
         uint256 _repayAmount,
         address _borrowerToLiquidate,
         bool _isBorrowTokenUSDC,
         address _jSupplyTokenAddress
     ) external {
-        address underlyingBorrowToken = JCollateralCapErc20Delegator(
-            _jBorrowTokenAddress
+        address underlyingRepayToken = JCollateralCapErc20Delegator(
+            _jRepayTokenAddress
         ).underlying();
         uint256 flashLoanAmount = _getFlashLoanAmount(
-            underlyingBorrowToken,
+            underlyingRepayToken,
             _repayAmount,
             _isBorrowTokenUSDC
         );
@@ -81,7 +81,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             msg.sender, // initiator
             _borrowerToLiquidate, // borrowerToLiquidate
             jTokenToFlashLoan.underlying(), // flashLoanedTokenAddress
-            _jBorrowTokenAddress, // jBorrowTokenAddress
+            _jRepayTokenAddress, // jRepayTokenAddress
             flashLoanAmount, // flashLoanAmount
             _repayAmount, // repayAmount
             _jSupplyTokenAddress // jSupplyTokenAddress
@@ -118,7 +118,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
                 address initiator,
                 address borrowerToLiquidate,
                 address flashLoanedTokenAddress,
-                address jBorrowTokenAddress,
+                address jRepayTokenAddress,
                 uint256 flashLoanAmount,
                 uint256 repayAmount,
                 address jSupplyTokenAddress
@@ -150,7 +150,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
             liquidationData.borrowerToLiquidate = borrowerToLiquidate;
             liquidationData.flashLoanedTokenAddress = flashLoanedTokenAddress;
-            liquidationData.jBorrowTokenAddress = jBorrowTokenAddress;
+            liquidationData.jRepayTokenAddress = jRepayTokenAddress;
             liquidationData.flashLoanAmount = flashLoanAmount;
             liquidationData.repayAmount = repayAmount;
             liquidationData.jSupplyTokenAddress = jSupplyTokenAddress;
@@ -161,16 +161,16 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         flashLoanedToken.approve(msg.sender, _amount.add(_fee));
 
         // your logic is written here...
-        JCollateralCapErc20Delegator jBorrowToken = JCollateralCapErc20Delegator(
-                liquidationData.jBorrowTokenAddress
-            );
+        JCollateralCapErc20Delegator jRepayToken = JCollateralCapErc20Delegator(
+            liquidationData.jRepayTokenAddress
+        );
 
         // Swap token that we flash loaned (e.g. USDC.e) to the token needed
         // to repay the borrow position (e.g. MIM)
         _swapFlashLoanTokenToBorrowToken(
             liquidationData.flashLoanedTokenAddress,
             liquidationData.flashLoanAmount,
-            jBorrowToken.underlying(),
+            jRepayToken.underlying(),
             liquidationData.repayAmount
         );
 
@@ -199,7 +199,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     function _swapFlashLoanTokenToBorrowToken(
         address _flashLoanedTokenAddress,
         uint256 _flashLoanAmount,
-        address _jBorrowTokenUnderlyingAddress,
+        address _jRepayTokenUnderlyingAddress,
         uint256 _repayAmount
     ) internal {
         // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
@@ -210,13 +210,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
         address[] memory swapPath = new address[](2);
         swapPath[0] = _flashLoanedTokenAddress;
-        swapPath[1] = _jBorrowTokenUnderlyingAddress;
+        swapPath[1] = _jRepayTokenUnderlyingAddress;
 
         JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
             _flashLoanAmount, // amountIn
             _repayAmount, // amountOutMin
             swapPath, // path
-            _jBorrowTokenUnderlyingAddress, // to
+            _jRepayTokenUnderlyingAddress, // to
             block.timestamp // deadline
         );
     }
