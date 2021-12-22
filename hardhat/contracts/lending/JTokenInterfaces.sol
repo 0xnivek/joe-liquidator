@@ -13,9 +13,22 @@ interface JErc20Storage {
     function underlying() external returns (address);
 }
 
-interface JWrappedNativeInterface is JErc20Storage {}
+interface JErc20Interface is JErc20Storage {
+    function liquidateBorrow(
+        address borrower,
+        uint256 repayAmount,
+        JTokenInterface jTokenCollateral
+    ) external returns (uint256);
+}
 
-interface JCollateralCapErc20Delegator is JErc20Storage {
+interface JWrappedNativeInterface is JErc20Interface {
+    function liquidateBorrowNative(
+        address borrower,
+        JTokenInterface jTokenCollateral
+    ) external payable returns (uint256);
+}
+
+interface JCollateralCapErc20Delegator is JErc20Interface {
     function flashLoan(
         ERC3156FlashBorrowerInterface receiver,
         address initiator,

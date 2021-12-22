@@ -1,42 +1,8 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "JCollateralCapErc20Delegator",
+  "contractName": "JErc20Interface",
   "sourceName": "contracts/lending/JTokenInterfaces.sol",
   "abi": [
-    {
-      "inputs": [
-        {
-          "internalType": "contract ERC3156FlashBorrowerInterface",
-          "name": "receiver",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "initiator",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "data",
-          "type": "bytes"
-        }
-      ],
-      "name": "flashLoan",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
     {
       "inputs": [
         {

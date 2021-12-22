@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640147396920,
-      "contentHash": "ef10fd2dec90aecb906b3fb9536bca9c",
+      "lastModificationDate": 1640147804429,
+      "contentHash": "e9d01163c33260c01472f5e30c5846fb",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -116,8 +116,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640141086634,
-      "contentHash": "497a574b265a6d842f4773647bc8ec23",
+      "lastModificationDate": 1640147741579,
+      "contentHash": "1d621e4198e605b825338d3b369ff888",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -150,6 +150,7 @@
       ],
       "artifacts": [
         "JCollateralCapErc20Delegator",
+        "JErc20Interface",
         "JErc20Storage",
         "JTokenInterface",
         "JWrappedNativeInterface",

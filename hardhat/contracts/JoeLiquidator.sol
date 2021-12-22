@@ -175,6 +175,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
 
         _performLiquidation(
+            jRepayToken,
             liquidationData.borrowerToLiquidate,
             liquidationData.repayAmount,
             JTokenInterface(liquidationData.jSeizeTokenAddress)
@@ -191,10 +192,17 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _jSeizeToken The market in which to seize collateral from the borrower
      */
     function _performLiquidation(
+        JErc20Interface _jRepayToken,
         address _borrowerToLiquidate,
         uint256 _repayAmount,
         JTokenInterface _jSeizeToken
-    ) internal {}
+    ) internal {
+        _jRepayToken.liquidateBorrow(
+            _borrowerToLiquidate,
+            _repayAmount,
+            _jSeizeToken
+        );
+    }
 
     function _swapFlashLoanTokenToBorrowToken(
         address _flashLoanedTokenAddress,
