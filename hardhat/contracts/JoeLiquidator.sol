@@ -131,19 +131,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         JCollateralCapErc20Interface jBorrowToken = JCollateralCapErc20Interface(
                 jBorrowTokenAddress
             );
-        address jBorrowTokenUnderlying = jBorrowToken.underlying();
-        // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
-        flashLoanedToken.approve(joeRouter02Address, flashLoanAmount);
-
-        address[] memory swapPath = new address[](2);
-        swapPath[0] = flashLoanedTokenAddress;
-        swapPath[1] = jBorrowTokenUnderlying;
-        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
-            flashLoanAmount, // amountIn
-            borrowAmount, // amountOutMin
-            swapPath, // path
-            jBorrowTokenUnderlying, // to
-            block.timestamp // deadline
+        address jBorrowTokenUnderlyingAddress = jBorrowToken.underlying();
+        // Swap token that we flash loaned (e.g. USDC.e) to the token needed
+        // to repay the borrow position (e.g. MIM)
+        _swapFlashLoanTokenToBorrowToken(
+            flashLoanedTokenAddress,
+            flashLoanAmount,
+            jBorrowTokenUnderlyingAddress,
+            borrowAmount
         );
 
         // _performLiquidation(
@@ -167,6 +162,31 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 _repayAmount,
         JTokenInterface _jTokenCollateral
     ) internal {}
+
+    function _swapFlashLoanTokenToBorrowToken(
+        address _flashLoanedTokenAddress,
+        uint256 _flashLoanAmount,
+        address _jBorrowTokenUnderlyingAddress,
+        uint256 _borrowAmount
+    ) internal {
+        // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
+        ERC20(_flashLoanedTokenAddress).approve(
+            joeRouter02Address,
+            _flashLoanAmount
+        );
+
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = _flashLoanedTokenAddress;
+        swapPath[1] = _jBorrowTokenUnderlyingAddress;
+
+        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+            _flashLoanAmount, // amountIn
+            _borrowAmount, // amountOutMin
+            swapPath, // path
+            _jBorrowTokenUnderlyingAddress, // to
+            block.timestamp // deadline
+        );
+    }
 
     function _getJTokenToFlashLoan(bool _isBorrowTokenUSDC)
         internal
