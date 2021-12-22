@@ -109,6 +109,8 @@ describe("JoeLiquidator", function () {
       expect(jLINKEBorrowRatePerSecond.gt(0)).to.equal(true);
       console.log("jLINKE BORROW RATE PER SECOND:", jLINKEBorrowRatePerSecond);
 
+      /// 5. Get jAVAX collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
+      const jAVAXCollateralFactor = 0.75;
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {
