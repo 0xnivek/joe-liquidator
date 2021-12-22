@@ -39,6 +39,7 @@ describe("JoeLiquidator", function () {
   let joetrollerContract;
   let joetrollerExtensionContract;
   let jAVAXContract;
+  let jLINKEContract;
 
   let owner;
   let addr1;
@@ -67,6 +68,7 @@ describe("JoeLiquidator", function () {
     joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
     joetrollerExtensionContract = await ethers.getContractAt("JoetrollerInterfaceExtension", JOETROLLER_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
+    jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
 
     [owner, addr1, addr2] = await ethers.getSigners();
   });
@@ -101,6 +103,12 @@ describe("JoeLiquidator", function () {
       /// 3. Get account liquidity in protocol
       const [err, liquidity, shortfall] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY:", liquidity);
+
+      /// 4. Fetch borrow rate per second for jLINKE
+      const jLINKEBorrowRatePerSecond = await jLINKEContract.borrowRatePerSecond();
+      expect(jLINKEBorrowRatePerSecond.gt(0)).to.equal(true);
+      console.log("jLINKE BORROW RATE PER SECOND:", jLINKEBorrowRatePerSecond);
+
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {
