@@ -32,7 +32,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address flashLoanedTokenAddress;
         address jRepayTokenAddress;
         address borrowerToLiquidate;
-        address jSupplyTokenAddress;
+        address jSeizeTokenAddress;
         uint256 flashLoanAmount;
         uint256 repayAmount;
     }
@@ -55,14 +55,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _repayAmount The amount of the tokens to repay
      * @param _borrowerToLiquidate The address of the borrower to liquidate
      * @param _isRepayTokenUSDC Indicates whether the borrow position to repay is in USDC
-     * @param _jSupplyTokenAddress The address of the jToken contract to seize collateral from
+     * @param _jSeizeTokenAddress The address of the jToken contract to seize collateral from
      */
     function doFlashloan(
         address _jRepayTokenAddress,
         uint256 _repayAmount,
         address _borrowerToLiquidate,
         bool _isRepayTokenUSDC,
-        address _jSupplyTokenAddress
+        address _jSeizeTokenAddress
     ) external {
         address underlyingRepayToken = JCollateralCapErc20Delegator(
             _jRepayTokenAddress
@@ -84,7 +84,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             _jRepayTokenAddress, // jRepayTokenAddress
             flashLoanAmount, // flashLoanAmount
             _repayAmount, // repayAmount
-            _jSupplyTokenAddress // jSupplyTokenAddress
+            _jSeizeTokenAddress // jSeizeTokenAddress
         );
 
         jTokenToFlashLoan.flashLoan(this, msg.sender, flashLoanAmount, data);
@@ -121,7 +121,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
                 address jRepayTokenAddress,
                 uint256 flashLoanAmount,
                 uint256 repayAmount,
-                address jSupplyTokenAddress
+                address jSeizeTokenAddress
             ) = abi.decode(
                     _data,
                     (
@@ -153,7 +153,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             liquidationData.jRepayTokenAddress = jRepayTokenAddress;
             liquidationData.flashLoanAmount = flashLoanAmount;
             liquidationData.repayAmount = repayAmount;
-            liquidationData.jSupplyTokenAddress = jSupplyTokenAddress;
+            liquidationData.jSeizeTokenAddress = jSeizeTokenAddress;
         }
 
         // Approve flash loan lender to retrieve loan amount + fee from us
@@ -177,7 +177,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         _performLiquidation(
             liquidationData.borrowerToLiquidate,
             liquidationData.repayAmount,
-            JTokenInterface(liquidationData.jSupplyTokenAddress)
+            JTokenInterface(liquidationData.jSeizeTokenAddress)
         );
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
@@ -188,12 +188,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * The collateral seized is transferred to the liquidator.
      * @param _borrowerToLiquidate The borrower of this jToken to be liquidated
      * @param _repayAmount The amount of the underlying borrowed asset to repay
-     * @param _jTokenCollateral The market in which to seize collateral from the borrower
+     * @param _jSeizeToken The market in which to seize collateral from the borrower
      */
     function _performLiquidation(
         address _borrowerToLiquidate,
         uint256 _repayAmount,
-        JTokenInterface _jTokenCollateral
+        JTokenInterface _jSeizeToken
     ) internal {}
 
     function _swapFlashLoanTokenToBorrowToken(
