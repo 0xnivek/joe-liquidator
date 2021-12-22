@@ -54,14 +54,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _jRepayTokenAddress The address of the jToken contract to borrow from
      * @param _repayAmount The amount of the tokens to repay
      * @param _borrowerToLiquidate The address of the borrower to liquidate
-     * @param _isBorrowTokenUSDC Indicates whether the borrow position to repay is in USDC
+     * @param _isRepayTokenUSDC Indicates whether the borrow position to repay is in USDC
      * @param _jSupplyTokenAddress The address of the jToken contract to seize collateral from
      */
     function doFlashloan(
         address _jRepayTokenAddress,
         uint256 _repayAmount,
         address _borrowerToLiquidate,
-        bool _isBorrowTokenUSDC,
+        bool _isRepayTokenUSDC,
         address _jSupplyTokenAddress
     ) external {
         address underlyingRepayToken = JCollateralCapErc20Delegator(
@@ -70,11 +70,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 flashLoanAmount = _getFlashLoanAmount(
             underlyingRepayToken,
             _repayAmount,
-            _isBorrowTokenUSDC
+            _isRepayTokenUSDC
         );
 
         JCollateralCapErc20Delegator jTokenToFlashLoan = _getJTokenToFlashLoan(
-            _isBorrowTokenUSDC
+            _isRepayTokenUSDC
         );
 
         bytes memory data = abi.encode(
@@ -221,12 +221,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
     }
 
-    function _getJTokenToFlashLoan(bool _isBorrowTokenUSDC)
+    function _getJTokenToFlashLoan(bool _isRepayTokenUSDC)
         internal
         view
         returns (JCollateralCapErc20Delegator)
     {
-        if (_isBorrowTokenUSDC) {
+        if (_isRepayTokenUSDC) {
             return JCollateralCapErc20Delegator(jWETHEAddress);
         } else {
             return JCollateralCapErc20Delegator(jUSDCEAddress);
@@ -236,10 +236,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     function _getFlashLoanAmount(
         address _underlyingBorrowToken,
         uint256 _repayAmount,
-        bool _isBorrowTokenUSDC
+        bool _isRepayTokenUSDC
     ) internal view returns (uint256) {
         address[] memory path = new address[](2);
-        if (_isBorrowTokenUSDC) {
+        if (_isRepayTokenUSDC) {
             path[0] = WETHE;
         } else {
             path[0] = USDCE;
