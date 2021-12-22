@@ -187,7 +187,36 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             flashLoanAmountToRepay
         );
 
+        // Convert any remaining seized token to native AVAX
+        _swapRemainingSeizedTokenToAVAX(liquidationData.jSeizeTokenAddress);
+
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
+    }
+
+    function _swapRemainingSeizedTokenToAVAX(
+        address _jSeizeTokenUnderlyingAddress
+    ) internal {
+        // Swap seized token to AVAX
+        ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
+        uint256 remainingSeizeAmount = seizeToken.balanceOf(address(this));
+
+        require(
+            remainingSeizeAmount > 0,
+            "JoeLiquidator: Expected to have remaining seize amount in order to have profitted from liquidation"
+        );
+
+        seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
+
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = _jSeizeTokenUnderlyingAddress;
+        swapPath[1] = WAVAX;
+        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+            remainingSeizeAmount, // amountIn
+            0, // amountOutMin
+            swapPath, // path
+            WAVAX, // to
+            block.timestamp // deadline
+        );
     }
 
     function _swapSeizedTokenToFlashLoanToken(
