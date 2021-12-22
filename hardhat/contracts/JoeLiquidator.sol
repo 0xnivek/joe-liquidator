@@ -29,11 +29,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
 
     struct LiquidationData {
-        address flashLoanedTokenAddress;
         address jRepayTokenAddress;
-        address borrowerToLiquidate;
         address jSeizeTokenAddress;
-        uint256 flashLoanAmount;
+        address borrowerToLiquidate;
         uint256 repayAmount;
     }
 
@@ -149,15 +147,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             );
 
             liquidationData.borrowerToLiquidate = borrowerToLiquidate;
-            liquidationData.flashLoanedTokenAddress = flashLoanedTokenAddress;
             liquidationData.jRepayTokenAddress = jRepayTokenAddress;
-            liquidationData.flashLoanAmount = flashLoanAmount;
             liquidationData.repayAmount = repayAmount;
             liquidationData.jSeizeTokenAddress = jSeizeTokenAddress;
         }
 
         // Approve flash loan lender to retrieve loan amount + fee from us
-        ERC20 flashLoanedToken = ERC20(liquidationData.flashLoanedTokenAddress);
+        ERC20 flashLoanedToken = ERC20(_token);
         flashLoanedToken.approve(msg.sender, _amount.add(_fee));
 
         // your logic is written here...
@@ -168,8 +164,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         // Swap token that we flash loaned (e.g. USDC.e) to the token needed
         // to repay the borrow position (e.g. MIM)
         _swapFlashLoanTokenToBorrowToken(
-            liquidationData.flashLoanedTokenAddress,
-            liquidationData.flashLoanAmount,
+            _token,
+            _amount,
             jRepayToken.underlying(),
             liquidationData.repayAmount
         );
@@ -182,6 +178,29 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
+    }
+
+    function _swapSeizedTokenToFlashLoanToken(
+        address _jSeizeTokenUnderlyingAddress,
+        uint256 _seizeAmount,
+        address _flashLoanedTokenAddress,
+        uint256 _flashLoanAmount
+    ) internal {
+        // // Swap seized token to flashLoanedToken (e.g. USDC.e)
+        // ERC20(_flashLoanedTokenAddress).approve(
+        //     joeRouter02Address,
+        //     _flashLoanAmount
+        // );
+        // address[] memory swapPath = new address[](2);
+        // swapPath[0] = _flashLoanedTokenAddress;
+        // swapPath[1] = _jRepayTokenUnderlyingAddress;
+        // JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+        //     _flashLoanAmount, // amountIn
+        //     _repayAmount, // amountOutMin
+        //     swapPath, // path
+        //     _jRepayTokenUnderlyingAddress, // to
+        //     block.timestamp // deadline
+        // );
     }
 
     /**
