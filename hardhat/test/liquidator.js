@@ -33,6 +33,10 @@ const DAIE = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
 const LINKE = "0x5947BB275c521040051D82396192181b413227A3";
 const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
 
+const SECONDS_IN_MINUTE = 60;
+const SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
+const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
+
 
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
@@ -133,6 +137,14 @@ describe("JoeLiquidator", function () {
       const jLINKEBorrowBalanceAfter = await jLINKEContract.borrowBalanceCurrent(owner.address);
       expect(jLINKEBorrowBalanceAfter.eq(amountOfLinkEToBorrow)).to.equal(true);
       console.log("jLINKE BORROW BALANCE AFTER:", jLINKEBorrowBalanceAfter);
+
+      /// 7. Increase time and mine block so that we can make account liquidatable!
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 7]);
+      await ethers.provider.send("evm_mine");
+
+
+      const jLINKEBorrowBalanceAfterMining = await jLINKEContract.borrowBalanceCurrent(owner.address);
+      console.log("jLINKE BORROW BALANCE AFTER MINING:", jLINKEBorrowBalanceAfterMining);
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {
