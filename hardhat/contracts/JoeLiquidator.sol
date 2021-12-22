@@ -91,7 +91,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     /**
      * @notice Called by FlashLoanLender once flashloan is approved
      * @param _initiator The address that initiated this flash loan
-     * @param _flashLoanToken The address of the underlying token contract borrowed from
+     * @param _flashLoanTokenAddress The address of the underlying token contract borrowed from
      * @param _flashLoanAmount The amount of the tokens borrowed
      * @param _flashLoanFee The fee for this flash loan
      * @param _data The encoded data used for this flash loan
@@ -153,11 +153,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         }
 
         // Approve flash loan lender to retrieve loan amount + fee from us
-        ERC20 flashLoanedToken = ERC20(_flashLoanTokenAddress);
-        flashLoanedToken.approve(
-            msg.sender,
-            _flashLoanAmount.add(_flashLoanFee)
-        );
+        ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
+        uint256 flashLoanAmountToRepay = _flashLoanAmount.add(_flashLoanFee);
+        flashLoanToken.approve(msg.sender, flashLoanAmountToRepay);
 
         // your logic is written here...
         JCollateralCapErc20Delegator jRepayToken = JCollateralCapErc20Delegator(
@@ -173,6 +171,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             liquidationData.repayAmount
         );
 
+        // Perform liquidation by repaying borrow position using newly obtained
+        // borrow token and receive seize token in return.
         _performLiquidation(
             jRepayToken,
             liquidationData.borrowerToLiquidate,
@@ -180,30 +180,37 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             JTokenInterface(liquidationData.jSeizeTokenAddress)
         );
 
+        // Swap seize token to flash loan token to repay flashLoanAmountToRepay
+        _swapSeizedTokenToFlashLoanToken(
+            liquidationData.jSeizeTokenAddress,
+            _flashLoanTokenAddress,
+            flashLoanAmountToRepay
+        );
+
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
 
     function _swapSeizedTokenToFlashLoanToken(
         address _jSeizeTokenUnderlyingAddress,
-        uint256 _seizeAmount,
-        address _flashLoanedTokenAddress,
-        uint256 _flashLoanAmount
+        address _flashLoanTokenAddress,
+        uint256 _flashLoanAmountToRepay
     ) internal {
-        // // Swap seized token to flashLoanedToken (e.g. USDC.e)
-        // ERC20(_flashLoanedTokenAddress).approve(
-        //     joeRouter02Address,
-        //     _flashLoanAmount
-        // );
-        // address[] memory swapPath = new address[](2);
-        // swapPath[0] = _flashLoanedTokenAddress;
-        // swapPath[1] = _jRepayTokenUnderlyingAddress;
-        // JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
-        //     _flashLoanAmount, // amountIn
-        //     _repayAmount, // amountOutMin
-        //     swapPath, // path
-        //     _jRepayTokenUnderlyingAddress, // to
-        //     block.timestamp // deadline
-        // );
+        // Swap seized token to flashLoanedToken (e.g. USDC.e)
+        // TODO: Do we need to calculate the exact seizeAmount here?
+        ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
+        uint256 seizeAmount = seizeToken.balanceOf(address(this));
+        seizeToken.approve(joeRouter02Address, seizeAmount);
+
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = _jSeizeTokenUnderlyingAddress;
+        swapPath[1] = _flashLoanTokenAddress;
+        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+            seizeAmount, // amountIn
+            _flashLoanAmountToRepay, // amountOutMin
+            swapPath, // path
+            _flashLoanTokenAddress, // to
+            block.timestamp // deadline
+        );
     }
 
     /**
