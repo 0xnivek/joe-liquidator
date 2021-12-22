@@ -13,5 +13,5 @@ interface JoeRouter02 {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual returns (uint256[] memory amounts);
+    ) external returns (uint256[] memory amounts);
 }

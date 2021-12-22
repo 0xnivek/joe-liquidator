@@ -15,7 +15,7 @@ interface JErc20Storage {
 
 interface JWrappedNativeInterface is JErc20Storage {}
 
-interface JCollateralCapErc20Interface is JErc20Storage {
+interface JCollateralCapErc20Delegator is JErc20Storage {
     function flashLoan(
         ERC3156FlashBorrowerInterface receiver,
         address initiator,

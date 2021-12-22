@@ -1,6 +1,6 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "JErc20Storage",
+  "contractName": "JWrappedNativeInterface",
   "sourceName": "contracts/lending/JTokenInterfaces.sol",
   "abi": [
     {

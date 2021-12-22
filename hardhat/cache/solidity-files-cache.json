@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640109420699,
-      "contentHash": "04baf48234285dfd8b512af976e0a0b0",
+      "lastModificationDate": 1640146862158,
+      "contentHash": "19540d8f7f53a8d3f0d14b81bec5aa44",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -116,8 +116,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640043276644,
-      "contentHash": "30441a9b23544ee2ae6e78104eec2bbb",
+      "lastModificationDate": 1640141086634,
+      "contentHash": "497a574b265a6d842f4773647bc8ec23",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -142,15 +142,17 @@
           }
         }
       },
-      "imports": [],
+      "imports": [
+        "../interfaces/ERC3156FlashBorrowerInterface.sol"
+      ],
       "versionPragmas": [
         "^0.8.3"
       ],
       "artifacts": [
-        "JCollateralCapErc20",
+        "JCollateralCapErc20Delegator",
         "JErc20Storage",
         "JTokenInterface",
-        "JWrappedNative",
+        "JWrappedNativeInterface",
         "Joetroller"
       ]
     },
@@ -225,8 +227,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoeRouter02.sol": {
-      "lastModificationDate": 1640052727355,
-      "contentHash": "f1c2ce2c3555d147c943d093f1b9573f",
+      "lastModificationDate": 1640146884424,
+      "contentHash": "30b2a543c2949d5ebb834eb77abc7b9c",
       "sourceName": "contracts/lending/JoeRouter02.sol",
       "solcConfig": {
         "version": "0.8.4",
