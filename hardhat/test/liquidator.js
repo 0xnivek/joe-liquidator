@@ -6,7 +6,7 @@ const {
   expect
 } = require("chai");
 const {
-  solidity
+  solidity, link
 } = require("ethereum-waffle");
 const { isCallTrace } = require("hardhat/internal/hardhat-network/stack-traces/message-trace");
 
@@ -111,6 +111,28 @@ describe("JoeLiquidator", function () {
 
       /// 5. Get jAVAX collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
       const jAVAXCollateralFactor = 0.75;
+
+      /// 6. Borrow LINK.e from jLINKE contract.
+      /// Note: 
+      /// 1. 0.75 AVAX ~= 4.4122 LINK.E so we should borrow 4.0 LINK.e
+      /// 2. LINK.e has 8 decimals
+
+      // Confirm jLINK.e borrowBalanceCurrent is 0 before we borrow
+      const jLINKEBorrowBalanceBefore = await jLINKEContract.borrowBalanceCurrent(owner.address);
+      console.log("jLINKE BORROW BALANCE BEFORE:", jLINKEBorrowBalanceBefore);
+      expect(jLINKEBorrowBalanceBefore).to.equal(0);
+
+      // Borrow 4.0 LINK.e from jLINK.e contract
+      console.log("Borrowing...");
+      const amountOfLinkEToBorrow = ethers.utils.parseUnits("4", 8);
+      const borrowTxn = await jLINKEContract.connect(owner).borrow(amountOfLinkEToBorrow);
+      // Have to call `wait` to get transaction mined.
+      await borrowTxn.wait();
+
+      // Confirm jLINK.e borrowBalanceCurrent after borrow is 4.0 LINK.e
+      const jLINKEBorrowBalanceAfter = await jLINKEContract.borrowBalanceCurrent(owner.address);
+      expect(jLINKEBorrowBalanceAfter.eq(amountOfLinkEToBorrow)).to.equal(true);
+      console.log("jLINKE BORROW BALANCE AFTER:", jLINKEBorrowBalanceAfter);
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {
