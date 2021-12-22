@@ -7,6 +7,7 @@ import "./interfaces/ERC3156FlashLenderInterface.sol";
 import "./interfaces/IWAVAX.sol";
 import "./lending/JTokenInterfaces.sol";
 import "./lending/JoeRouter02.sol";
+import "./lending/JoetrollerInterface.sol";
 import "./libraries/SafeMath.sol";
 
 contract JoeLiquidator is ERC3156FlashBorrowerInterface {

@@ -36,7 +36,8 @@ const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
 
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
-  let joeTrollerContract;
+  let joetrollerContract;
+  let joetrollerExtensionContract;
   let jAVAXContract;
 
   let owner;
@@ -63,7 +64,8 @@ describe("JoeLiquidator", function () {
       JWETHE_ADDRESS
     );
 
-    joeTrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
+    joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
+    joetrollerExtensionContract = await ethers.getContractAt("JoetrollerInterfaceExtension", JOETROLLER_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
 
     [owner, addr1, addr2] = await ethers.getSigners();
@@ -71,7 +73,8 @@ describe("JoeLiquidator", function () {
 
   describe("Test liquidation", function () {
     // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
-    it("Supply 1 AVAX to jAVAX contract as collateral and obtain jAVAX in return", async function () {
+    it("Take out loan position", async function () {
+      /// 1. Supply 1 AVAX to jAVAX contract as collateral and obtain jAVAX in return
       const javaxBalanceBefore = await jAVAXContract.balanceOf(owner.address);
       expect(javaxBalanceBefore).to.equal(0);
 
@@ -83,6 +86,13 @@ describe("JoeLiquidator", function () {
       const javaxBalanceAfter = await jAVAXContract.balanceOf(owner.address);
       expect(javaxBalanceAfter.gt(0)).to.equal(true);
       console.log("OWNER JAVAX BALANCE AFTER", javaxBalanceAfter);
+
+      /// 2. Enter market via Joetroller for jAVAX for AVAX as collateral
+      await joetrollerContract.connect(owner).enterMarkets([JAVAX_ADDRESS])
+      // expect(
+      //   await joetrollerExtensionContract
+      //     .checkMembership(owner.address, JAVAX_ADDRESS)
+      // ).to.equal(true);
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {

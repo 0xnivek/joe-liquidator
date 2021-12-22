@@ -11,15 +11,7 @@ interface JTokenInterface is JTokenStorage {
     function balanceOf(address owner) external view returns (uint256);
 }
 
-interface Joetroller {
-    function isMarketListed(address jTokenAddress) external view returns (bool);
-
-    // function borrowAllowed(
-    //     address jToken,
-    //     address borrower,
-    //     uint256 borrowAmount
-    // ) external returns (uint256);
-}
+interface JToken is JTokenInterface {}
 
 interface JErc20Storage {
     function underlying() external returns (address);

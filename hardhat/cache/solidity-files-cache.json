@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640153915759,
-      "contentHash": "4e4aca2890dcb0283481ad8177f1f86a",
+      "lastModificationDate": 1640200783933,
+      "contentHash": "221bf5a2c07c81a0efed3ec673945e58",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -70,6 +70,7 @@
         "./interfaces/IWAVAX.sol",
         "./lending/JTokenInterfaces.sol",
         "./lending/JoeRouter02.sol",
+        "./lending/JoetrollerInterface.sol",
         "./libraries/SafeMath.sol"
       ],
       "versionPragmas": [
@@ -117,8 +118,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640198916758,
-      "contentHash": "6698aba030492b37672c0f72b19ae84e",
+      "lastModificationDate": 1640200742141,
+      "contentHash": "bbca2d5f9405f3aef656ce82bb323ea3",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -153,11 +154,11 @@
         "JCollateralCapErc20Delegator",
         "JErc20Interface",
         "JErc20Storage",
+        "JToken",
         "JTokenInterface",
         "JTokenStorage",
         "JWrappedNativeDelegator",
-        "JWrappedNativeInterface",
-        "Joetroller"
+        "JWrappedNativeInterface"
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/libraries/SafeMath.sol": {
@@ -298,6 +299,44 @@
       ],
       "artifacts": [
         "IWAVAX"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoetrollerInterface.sol": {
+      "lastModificationDate": 1640200744795,
+      "contentHash": "da99385a7857c2c41b3380a33eb218b7",
+      "sourceName": "contracts/lending/JoetrollerInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./JTokenInterfaces.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "Joetroller",
+        "JoetrollerInterfaceExtension"
       ]
     }
   }

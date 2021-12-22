@@ -1,8 +1,27 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "Joetroller",
-  "sourceName": "contracts/lending/JTokenInterfaces.sol",
+  "sourceName": "contracts/lending/JoetrollerInterface.sol",
   "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "jTokens",
+          "type": "address[]"
+        }
+      ],
+      "name": "enterMarkets",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
     {
       "inputs": [
         {
