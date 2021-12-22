@@ -91,16 +91,16 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     /**
      * @notice Called by FlashLoanLender once flashloan is approved
      * @param _initiator The address that initiated this flash loan
-     * @param _token The address of the underlying token contract borrowed from
-     * @param _amount The amount of the tokens borrowed
-     * @param _fee The fee for this flash loan
+     * @param _flashLoanToken The address of the underlying token contract borrowed from
+     * @param _flashLoanAmount The amount of the tokens borrowed
+     * @param _flashLoanFee The fee for this flash loan
      * @param _data The encoded data used for this flash loan
      */
     function onFlashLoan(
         address _initiator,
-        address _token,
-        uint256 _amount,
-        uint256 _fee,
+        address _flashLoanTokenAddress,
+        uint256 _flashLoanAmount,
+        uint256 _flashLoanFee,
         bytes calldata _data
     ) external override returns (bytes32) {
         require(
@@ -138,11 +138,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
                 "JoeLiquidator: Untrusted loan initiator"
             );
             require(
-                _token == flashLoanedTokenAddress,
+                _flashLoanTokenAddress == flashLoanedTokenAddress,
                 "JoeLiquidator: Encoded data (flashLoanedTokenAddress) does not match"
             );
             require(
-                _amount == flashLoanAmount,
+                _flashLoanAmount == flashLoanAmount,
                 "JoeLiquidator: Encoded data (flashLoanAmount) does not match"
             );
 
@@ -153,8 +153,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         }
 
         // Approve flash loan lender to retrieve loan amount + fee from us
-        ERC20 flashLoanedToken = ERC20(_token);
-        flashLoanedToken.approve(msg.sender, _amount.add(_fee));
+        ERC20 flashLoanedToken = ERC20(_flashLoanTokenAddress);
+        flashLoanedToken.approve(
+            msg.sender,
+            _flashLoanAmount.add(_flashLoanFee)
+        );
 
         // your logic is written here...
         JCollateralCapErc20Delegator jRepayToken = JCollateralCapErc20Delegator(
@@ -164,8 +167,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         // Swap token that we flash loaned (e.g. USDC.e) to the token needed
         // to repay the borrow position (e.g. MIM)
         _swapFlashLoanTokenToBorrowToken(
-            _token,
-            _amount,
+            _flashLoanTokenAddress,
+            _flashLoanAmount,
             jRepayToken.underlying(),
             liquidationData.repayAmount
         );
