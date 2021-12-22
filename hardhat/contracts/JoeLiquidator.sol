@@ -4,6 +4,7 @@ pragma solidity ^0.8.3;
 import "./interfaces/ERC20Interface.sol";
 import "./interfaces/ERC3156FlashBorrowerInterface.sol";
 import "./interfaces/ERC3156FlashLenderInterface.sol";
+import "./interfaces/IWAVAX.sol";
 import "./lending/JTokenInterfaces.sol";
 import "./lending/JoeRouter02.sol";
 import "./libraries/SafeMath.sol";
@@ -190,7 +191,18 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         // Convert any remaining seized token to native AVAX
         _swapRemainingSeizedTokenToAVAX(liquidationData.jSeizeTokenAddress);
 
+        // Transfer profited AVAX to liquidator
+        _transferProfitedAVAXToLiquidator(_initiator);
+
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
+    }
+
+    function _transferProfitedAVAXToLiquidator(address _liquidator) internal {
+        (bool success, ) = _liquidator.call{value: address(this).balance}("");
+        require(
+            success,
+            "JoeLiquidator: Failed to transfer profited AVAX to liquidator"
+        );
     }
 
     function _swapRemainingSeizedTokenToAVAX(
@@ -202,7 +214,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
         require(
             remainingSeizeAmount > 0,
-            "JoeLiquidator: Expected to have remaining seize amount in order to have profitted from liquidation"
+            "JoeLiquidator: Expected to have remaining seize amount in order to have profited from liquidation"
         );
 
         seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
@@ -210,7 +222,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address[] memory swapPath = new address[](2);
         swapPath[0] = _jSeizeTokenUnderlyingAddress;
         swapPath[1] = WAVAX;
-        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+        JoeRouter02(joeRouter02Address).swapExactTokensForAVAX(
             remainingSeizeAmount, // amountIn
             0, // amountOutMin
             swapPath, // path

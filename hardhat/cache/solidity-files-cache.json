@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640151048940,
-      "contentHash": "56c7cdd4498489767b6c0f42a711a28e",
+      "lastModificationDate": 1640153915759,
+      "contentHash": "4e4aca2890dcb0283481ad8177f1f86a",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -67,6 +67,7 @@
         "./interfaces/ERC20Interface.sol",
         "./interfaces/ERC3156FlashBorrowerInterface.sol",
         "./interfaces/ERC3156FlashLenderInterface.sol",
+        "./interfaces/IWAVAX.sol",
         "./lending/JTokenInterfaces.sol",
         "./lending/JoeRouter02.sol",
         "./libraries/SafeMath.sol"
@@ -228,8 +229,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoeRouter02.sol": {
-      "lastModificationDate": 1640146884424,
-      "contentHash": "30b2a543c2949d5ebb834eb77abc7b9c",
+      "lastModificationDate": 1640151855605,
+      "contentHash": "749591103887acee43d61f04ada65c9e",
       "sourceName": "contracts/lending/JoeRouter02.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -260,6 +261,41 @@
       ],
       "artifacts": [
         "JoeRouter02"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/IWAVAX.sol": {
+      "lastModificationDate": 1640152153777,
+      "contentHash": "f337ed8241764fd071fede6f4166b1ea",
+      "sourceName": "contracts/interfaces/IWAVAX.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "IWAVAX"
       ]
     }
   }
