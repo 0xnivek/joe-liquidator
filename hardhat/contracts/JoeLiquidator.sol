@@ -197,10 +197,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 _repayAmount,
         JTokenInterface _jSeizeToken
     ) internal {
-        _jRepayToken.liquidateBorrow(
+        uint256 err = _jRepayToken.liquidateBorrow(
             _borrowerToLiquidate,
             _repayAmount,
             _jSeizeToken
+        );
+        require(
+            err == 0,
+            "JoeLiquidator: Error occurred trying to liquidateBorrow"
         );
     }
 
