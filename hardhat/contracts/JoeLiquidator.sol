@@ -8,6 +8,7 @@ import "./interfaces/WAVAXInterface.sol";
 import "./lending/JTokenInterfaces.sol";
 import "./lending/JoeRouter02.sol";
 import "./lending/JoetrollerInterface.sol";
+import "./lending/PriceOracle.sol";
 import "./libraries/SafeMath.sol";
 
 contract JoeLiquidator is ERC3156FlashBorrowerInterface {
@@ -18,6 +19,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      */
     address public joetrollerAddress;
     address public joeRouter02Address;
+    address public priceOracleAddress;
     address public jUSDCEAddress;
     address public jWETHEAddress;
 
@@ -40,11 +42,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     constructor(
         address _joetrollerAddress,
         address _joeRouter02Address,
+        address _priceOracleAddress,
         address _jUSDCEAddress,
         address _jWETHEAddress
     ) {
         joetrollerAddress = _joetrollerAddress;
         joeRouter02Address = _joeRouter02Address;
+        priceOracleAddress = _priceOracleAddress;
         jUSDCEAddress = _jUSDCEAddress;
         jWETHEAddress = _jWETHEAddress;
     }

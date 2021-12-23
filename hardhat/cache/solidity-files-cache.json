@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640229982217,
-      "contentHash": "4724cef3652f9cbbd89dd9170d818679",
+      "lastModificationDate": 1640230515289,
+      "contentHash": "8fa15768f7934b4326133798e367e0ed",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -71,6 +71,7 @@
         "./lending/JTokenInterfaces.sol",
         "./lending/JoeRouter02.sol",
         "./lending/JoetrollerInterface.sol",
+        "./lending/PriceOracle.sol",
         "./libraries/SafeMath.sol"
       ],
       "versionPragmas": [
