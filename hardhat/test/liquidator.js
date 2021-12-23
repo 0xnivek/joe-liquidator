@@ -23,6 +23,7 @@ const JAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
 const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
 const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
 const JLINKE_ADDRESS = "0x585E7bC75089eD111b656faA7aeb1104F5b96c15";
+const JUSDTE_ADDRESS = "0x8b650e26404AC6837539ca96812f0123601E4448";
 
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const WETHE = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
@@ -44,6 +45,7 @@ describe("JoeLiquidator", function () {
   let joeRouterContract;
   let jAVAXContract;
   let jLINKEContract;
+  let jUSDTEContract;
   let wavaxContract;
   let linkeContract;
 
@@ -75,6 +77,7 @@ describe("JoeLiquidator", function () {
     joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
     jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
+    jUSDTEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JUSDTE_ADDRESS);
     wavaxContract = await ethers.getContractAt("WAVAXInterface", WAVAX);
     linkeContract = await ethers.getContractAt("ERC20", LINKE);
 
@@ -165,18 +168,19 @@ describe("JoeLiquidator", function () {
           .checkMembership(owner.address, JLINKE_ADDRESS)
       ).to.equal(true);
 
+
       /// 3. Get account liquidity in protocol before borrow
       const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY BEFORE BORROW:", liquidityBeforeBorrow);
       console.log("SHORTFUL BEFORE BORROW:", shortfallBeforeBorrow);
 
+
+      /// 4. Fetch borrow rate per second for jUSDT.e
+      const jUSDTEBorrowRatePerSecond = await jUSDTEContract.borrowRatePerSecond();
+      expect(jUSDTEBorrowRatePerSecond.gt(0)).to.equal(true);
+      console.log("jUSDT.e BORROW RATE PER SECOND:", jUSDTEBorrowRatePerSecond);
+
       return;
-
-
-      /// 4. Fetch borrow rate per second for jLINKE
-      const jLINKEBorrowRatePerSecond = await jLINKEContract.borrowRatePerSecond();
-      expect(jLINKEBorrowRatePerSecond.gt(0)).to.equal(true);
-      console.log("jLINKE BORROW RATE PER SECOND:", jLINKEBorrowRatePerSecond);
 
       /// 5. Get jAVAX collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
       const jAVAXCollateralFactor = 0.75;
