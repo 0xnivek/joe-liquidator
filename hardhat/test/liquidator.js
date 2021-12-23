@@ -91,6 +91,7 @@ describe("JoeLiquidator", function () {
       /// Note: 0.165 AVAX ~= 1 LINK.e
       const amountOfAVAXToSwap = ethers.utils.parseEther("0.5");
 
+      // Deposit 0.5 AVAX to WAVAX 
       const wavaxBalanceBeforeDeposit = await wavaxContract.balanceOf(owner.address);
       console.log("WAVAX BALANCE BEFORE DEPOSIT:", wavaxBalanceBeforeDeposit);
       expect(wavaxBalanceBeforeDeposit.eq(0)).to.equal(true);
@@ -101,6 +102,10 @@ describe("JoeLiquidator", function () {
       const wavaxBalanceAfterDeposit = await wavaxContract.balanceOf(owner.address);
       console.log("WAVAX BALANCE AFTER DEPOSIT:", wavaxBalanceAfterDeposit);
       expect(wavaxBalanceAfterDeposit.eq(amountOfAVAXToSwap)).to.equal(true);
+
+      // Approve JoeRouter 0.5 WAVAX
+      const approveJoeRouterWAVAXTxn = await wavaxContract.connect(owner).approve(JOE_ROUTER_02_ADDRESS, amountOfAVAXToSwap);
+      await approveJoeRouterWAVAXTxn.wait();
 
       return;
 

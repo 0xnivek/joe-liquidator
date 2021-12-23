@@ -304,8 +304,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/WAVAXInterface.sol": {
-      "lastModificationDate": 1640223134635,
-      "contentHash": "42560392a228bb553794b6058fde179a",
+      "lastModificationDate": 1640223464171,
+      "contentHash": "347b0da12cf0e5c72a608deae9656c46",
       "sourceName": "contracts/interfaces/WAVAXInterface.sol",
       "solcConfig": {
         "version": "0.8.4",

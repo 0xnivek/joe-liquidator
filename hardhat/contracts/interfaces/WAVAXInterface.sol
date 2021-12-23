@@ -9,4 +9,6 @@ interface WAVAXInterface {
     function withdraw(uint256) external;
 
     function balanceOf(address account) external view returns (uint256);
+
+    function approve(address guy, uint256 wad) external returns (bool);
 }
