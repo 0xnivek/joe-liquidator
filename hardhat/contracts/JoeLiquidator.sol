@@ -189,14 +189,16 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 flashLoanAmountToRepay = _flashLoanAmount.add(_flashLoanFee);
         flashLoanToken.approve(msg.sender, flashLoanAmountToRepay);
 
-        // your logic is written here...
+        // ********************************************************************
+        // Our custom logic begins here...
+        // ********************************************************************
+
         JCollateralCapErc20Delegator jRepayToken = JCollateralCapErc20Delegator(
             liquidationData.jRepayTokenAddress
         );
 
-        // Swap token that we flash loaned (e.g. USDC.e) to the token needed
-        // to repay the borrow position (e.g. MIM)
-        _swapFlashLoanTokenToBorrowToken(
+        // Swap token that we flash loaned (e.g. USDC.e) to the underlying repay token
+        _swapFlashLoanTokenToRepayToken(
             _flashLoanTokenAddress,
             _flashLoanAmount,
             jRepayToken.underlying(),
@@ -227,6 +229,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
         // // Transfer profited AVAX to liquidator
         // _transferProfitedAVAXToLiquidator(_initiator);
+
+        // ********************************************************************
+        // Our custom logic ends here...
+        // ********************************************************************
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
@@ -356,7 +362,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
     }
 
-    function _swapFlashLoanTokenToBorrowToken(
+    function _swapFlashLoanTokenToRepayToken(
         address _flashLoanedTokenAddress,
         uint256 _flashLoanAmount,
         address _jRepayTokenUnderlyingAddress,
