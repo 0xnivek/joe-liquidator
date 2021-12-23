@@ -18,6 +18,8 @@ interface JTokenInterface is JTokenStorage {
         external
         view
         returns (uint256);
+
+    function accrueInterest() external returns (uint256);
 }
 
 interface JToken is JTokenInterface {}

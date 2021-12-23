@@ -208,21 +208,15 @@ describe("JoeLiquidator", function () {
       console.log("LIQUIDITY AFTER BORROW:", liquidityAfterBorrow);
       console.log("SHORTFALL AFTER BORROW:", shortfallAfterBorrow);
 
-      return;
+      /// 7. Increase time, mine block, and accrue interest so that we can make account liquidatable!
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12]);
+      await ethers.provider.send("evm_mine");
 
-      /// 7. Increase time and mine block so that we can make account liquidatable!
-      for (let i = 0; i < 1500; i++) {
-        // console.log("MINING BLOCK:", i);
-        let block = await ethers.provider.getBlock();
-        let blockNumber = block.number;
-        let blockTimeStamp = block.timestamp;
-        console.log(`NUMBER: ${blockNumber}, TIMESTAMP: ${blockTimeStamp}`);
-        await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 100]);
-        await ethers.provider.send("evm_mine");
-      }
+      const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();
+      await accrueUSDTEInterestTxn.wait();
 
-      const jLINKEBorrowBalanceAfterMining = await jLINKEContract.borrowBalanceCurrent(owner.address);
-      console.log("jLINKE BORROW BALANCE AFTER MINING:", jLINKEBorrowBalanceAfterMining);
+      const jUSDTEBorrowBalanceAfterMining = await jUSDTEContract.borrowBalanceCurrent(owner.address);
+      console.log("jUSDTE BORROW BALANCE AFTER MINING:", jUSDTEBorrowBalanceAfterMining);
 
       // Confirm account has shortfall, a.k.a. can be liquidated 
       const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(owner.address);
