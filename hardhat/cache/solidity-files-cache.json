@@ -337,6 +337,43 @@
       "artifacts": [
         "WAVAXInterface"
       ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/PriceOracle.sol": {
+      "lastModificationDate": 1640229549094,
+      "contentHash": "d3f8ac04fbfcdfcdb8e43a37cf77dc8a",
+      "sourceName": "contracts/lending/PriceOracle.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./JTokenInterfaces.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "PriceOracle"
+      ]
     }
   }
 }
