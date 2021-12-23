@@ -64,11 +64,17 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address _borrowerToLiquidate,
         address _jRepayTokenAddress,
         address _jSeizeTokenAddress
-    ) internal isLiquidatable(_borrowerToLiquidate) {
+    ) external isLiquidatable(_borrowerToLiquidate) {
         uint256 amountToRepay = getAmountToRepay(
             _borrowerToLiquidate,
             _jRepayTokenAddress,
             _jSeizeTokenAddress
+        );
+        doFlashloan(
+            _borrowerToLiquidate,
+            _jRepayTokenAddress,
+            _jSeizeTokenAddress,
+            amountToRepay
         );
     }
 
@@ -112,30 +118,30 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
 
     /**
      * @notice Perform flash loan for given jToken and amount
-     * @param _jRepayTokenAddress The address of the jToken contract to borrow from
-     * @param _repayAmount The amount of the tokens to repay
      * @param _borrowerToLiquidate The address of the borrower to liquidate
-     * @param _isRepayTokenUSDC Indicates whether the borrow position to repay is in USDC
+     * @param _jRepayTokenAddress The address of the jToken contract to borrow from
      * @param _jSeizeTokenAddress The address of the jToken contract to seize collateral from
+     * @param _repayAmount The amount of the tokens to repay
      */
     function doFlashloan(
-        address _jRepayTokenAddress,
-        uint256 _repayAmount,
         address _borrowerToLiquidate,
-        bool _isRepayTokenUSDC,
-        address _jSeizeTokenAddress
-    ) external {
+        address _jRepayTokenAddress,
+        address _jSeizeTokenAddress,
+        uint256 _repayAmount
+    ) internal {
         address underlyingRepayToken = JCollateralCapErc20Delegator(
             _jRepayTokenAddress
         ).underlying();
+        bool isRepayTokenUSDCE = underlyingRepayToken == USDCE;
+
         uint256 flashLoanAmount = _getFlashLoanAmount(
             underlyingRepayToken,
             _repayAmount,
-            _isRepayTokenUSDC
+            isRepayTokenUSDCE
         );
 
         JCollateralCapErc20Delegator jTokenToFlashLoan = _getJTokenToFlashLoan(
-            _isRepayTokenUSDC
+            isRepayTokenUSDCE
         );
 
         bytes memory data = abi.encode(
@@ -369,12 +375,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
     }
 
-    function _getJTokenToFlashLoan(bool _isRepayTokenUSDC)
+    function _getJTokenToFlashLoan(bool _isRepayTokenUSDCE)
         internal
         view
         returns (JCollateralCapErc20Delegator)
     {
-        if (_isRepayTokenUSDC) {
+        if (_isRepayTokenUSDCE) {
             return JCollateralCapErc20Delegator(jWETHEAddress);
         } else {
             return JCollateralCapErc20Delegator(jUSDCEAddress);
@@ -384,10 +390,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     function _getFlashLoanAmount(
         address _underlyingBorrowToken,
         uint256 _repayAmount,
-        bool _isRepayTokenUSDC
+        bool _isRepayTokenUSDCE
     ) internal view returns (uint256) {
         address[] memory path = new address[](2);
-        if (_isRepayTokenUSDC) {
+        if (_isRepayTokenUSDCE) {
             path[0] = WETHE;
         } else {
             path[0] = USDCE;
