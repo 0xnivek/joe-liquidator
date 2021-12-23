@@ -71,7 +71,6 @@ describe("JoeLiquidator", function () {
     joeLiquidatorContract = await JoeLiquidatorContractFactory.deploy(
       JOETROLLER_ADDRESS,
       JOE_ROUTER_02_ADDRESS,
-      PRICE_ORACLE_ADDRESS,
       JAVAX_ADDRESS,
       JWETHE_ADDRESS
     );
@@ -207,7 +206,7 @@ describe("JoeLiquidator", function () {
       // Have to call `wait` to get transaction mined.
       await borrowTxn.wait();
 
-      // Confirm jLINK.e borrowBalanceCurrent after borrow is 4.0 LINK.e
+      // Confirm jUSDT.e borrowBalanceCurrent after borrow is 11.0 USDT.e
       const jUSDTEBorrowBalanceAfter = await jUSDTEContract.borrowBalanceCurrent(owner.address);
       console.log("jUSDT.e BORROW BALANCE AFTER:", jUSDTEBorrowBalanceAfter);
       expect(jUSDTEBorrowBalanceAfter.eq(amountOfUSDTEToBorrow)).to.equal(true);
@@ -230,6 +229,11 @@ describe("JoeLiquidator", function () {
       const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY AFTER MINING:", liquidityAfterMining);
       console.log("SHORTFALL AFTER MINING:", shortfallAfterMining);
+
+      /// 8. Liquidate account!
+      console.log("Starting liquidation...");
+      const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(owner.address, JUSDTE_ADDRESS, JLINKE_ADDRESS);
+      await liquidateTxn.wait();
     });
   });
 
