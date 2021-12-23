@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640239206753,
-      "contentHash": "e25f6fc41252ba92cb3e39bb4f665720",
+      "lastModificationDate": 1640279808105,
+      "contentHash": "3e0d56dee124180daf045e7e35ba5143",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -64,6 +64,7 @@
         }
       },
       "imports": [
+        "hardhat/console.sol",
         "./interfaces/ERC20Interface.sol",
         "./interfaces/ERC3156FlashBorrowerInterface.sol",
         "./interfaces/ERC3156FlashLenderInterface.sol",
@@ -376,6 +377,41 @@
       ],
       "artifacts": [
         "PriceOracle"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/node_modules/hardhat/console.sol": {
+      "lastModificationDate": 1639946276384,
+      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
+      "sourceName": "hardhat/console.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
       ]
     }
   }

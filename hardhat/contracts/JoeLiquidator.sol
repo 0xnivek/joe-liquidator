@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
+import "hardhat/console.sol";
+
 import "./interfaces/ERC20Interface.sol";
 import "./interfaces/ERC3156FlashBorrowerInterface.sol";
 import "./interfaces/ERC3156FlashLenderInterface.sol";
@@ -65,10 +67,16 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address _jRepayTokenAddress,
         address _jSeizeTokenAddress
     ) external isLiquidatable(_borrowerToLiquidate) {
+        console.log("[JoeLiquidator] Calculating amount to pay...");
         uint256 amountToRepay = getAmountToRepay(
             _borrowerToLiquidate,
             _jRepayTokenAddress,
             _jSeizeTokenAddress
+        );
+        console.log(
+            "[JoeLiquidator] Going to repay %d for token with address %s...",
+            amountToRepay,
+            _jRepayTokenAddress
         );
         doFlashloan(
             _borrowerToLiquidate,
