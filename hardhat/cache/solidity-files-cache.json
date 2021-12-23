@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640279808105,
-      "contentHash": "3e0d56dee124180daf045e7e35ba5143",
+      "lastModificationDate": 1640283369912,
+      "contentHash": "0818046cf76c86a2f9caac1d30d6aa78",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -73,6 +73,7 @@
         "./lending/JoeRouter02.sol",
         "./lending/JoetrollerInterface.sol",
         "./lending/PriceOracle.sol",
+        "./lending/Exponential.sol",
         "./libraries/SafeMath.sol"
       ],
       "versionPragmas": [
@@ -120,8 +121,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640235806483,
-      "contentHash": "95077ec4ddff776d9ed4cd8a121f1ffc",
+      "lastModificationDate": 1640283287370,
+      "contentHash": "a2272a1c1764830d85cdce3697f05784",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -412,6 +413,41 @@
       ],
       "artifacts": [
         "console"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/Exponential.sol": {
+      "lastModificationDate": 1640282298116,
+      "contentHash": "0c4ccd9d0a95ba47dd0b3a1620c62eb8",
+      "sourceName": "contracts/lending/Exponential.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "Exponential"
       ]
     }
   }

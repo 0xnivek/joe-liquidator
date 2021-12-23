@@ -11,9 +11,10 @@ import "./lending/JTokenInterfaces.sol";
 import "./lending/JoeRouter02.sol";
 import "./lending/JoetrollerInterface.sol";
 import "./lending/PriceOracle.sol";
+import "./lending/Exponential.sol";
 import "./libraries/SafeMath.sol";
 
-contract JoeLiquidator is ERC3156FlashBorrowerInterface {
+contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     using SafeMath for uint256;
 
     /**
@@ -94,9 +95,17 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         Joetroller joetroller = Joetroller(joetrollerAddress);
         PriceOracle priceOracle = joetroller.oracle();
 
+        console.log("[JoeLiquidator] Got joetroller and oracle...");
+
         uint256 closeFactor = joetroller.closeFactorMantissa();
         uint256 liquidationIncentive = joetroller
             .liquidationIncentiveMantissa();
+
+        console.log(
+            "[JoeLiquidator] Got close factor (%d) and liqudation incentive (%d)...",
+            closeFactor,
+            liquidationIncentive
+        );
 
         uint256 repayTokenUnderlyingPrice = priceOracle.getUnderlyingPrice(
             JToken(_jRepayTokenAddress)
@@ -105,12 +114,36 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             JToken(_jSeizeTokenAddress)
         );
 
+        console.log(
+            "[JoeLiquidator] Got repay token underlying price (%d) and seize token underlying price (%d)...",
+            repayTokenUnderlyingPrice,
+            seizeTokenUnderlyingPrice
+        );
+
+        console.log(
+            "[JoeLiquidator] Got current borrow balance (%d) and current seize balance (%d)...",
+            JTokenInterface(_jRepayTokenAddress).borrowBalanceStored(
+                _borrowerToLiquidate
+            ),
+            _getBalanceOfUnderlying(_jSeizeTokenAddress, _borrowerToLiquidate)
+            // JTokenInterface(_jSeizeTokenAddress).balanceOfUnderlying(
+            //     _borrowerToLiquidate
+            // )
+        );
+
         uint256 maxRepayAmount = (JTokenInterface(_jRepayTokenAddress)
-            .borrowBalanceCurrent(_borrowerToLiquidate) * closeFactor) /
+            .borrowBalanceStored(_borrowerToLiquidate) * closeFactor) /
             uint256(10**18);
-        uint256 maxSeizeAmount = (JTokenInterface(_jSeizeTokenAddress)
-            .balanceOfUnderlying(_borrowerToLiquidate) * liquidationIncentive) /
-            uint256(10**18);
+        uint256 maxSeizeAmount = (_getBalanceOfUnderlying(
+            _jSeizeTokenAddress,
+            _borrowerToLiquidate
+        ) * liquidationIncentive) / uint256(10**18);
+
+        console.log(
+            "[JoeLiquidator] Got max repay and seize amounts...",
+            repayTokenUnderlyingPrice,
+            seizeTokenUnderlyingPrice
+        );
 
         uint256 maxRepayAmountInUSD = maxRepayAmount *
             repayTokenUnderlyingPrice;
@@ -120,6 +153,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 maxAmountInUSD = (maxRepayAmountInUSD < maxSeizeAmountInUSD)
             ? maxRepayAmountInUSD
             : maxSeizeAmountInUSD;
+
+        console.log(
+            "[JoeLiquidator] Got max amount in USD...",
+            repayTokenUnderlyingPrice,
+            seizeTokenUnderlyingPrice
+        );
 
         return maxAmountInUSD / repayTokenUnderlyingPrice;
     }
@@ -462,5 +501,18 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         path[1] = _underlyingBorrowToken;
         return
             JoeRouter02(joeRouter02Address).getAmountsIn(_repayAmount, path)[0];
+    }
+
+    function _getBalanceOfUnderlying(
+        address _jSeizeTokenAddress,
+        address _owner
+    ) internal view returns (uint256) {
+        JTokenInterface jSeizeToken = JTokenInterface(_jSeizeTokenAddress);
+
+        // From https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L128
+        Exp memory exchangeRate = Exp({
+            mantissa: jSeizeToken.exchangeRateStored()
+        });
+        return mul_ScalarTruncate(exchangeRate, jSeizeToken.balanceOf(_owner));
     }
 }
