@@ -84,8 +84,10 @@ describe("JoeLiquidator", function () {
   describe("Test liquidation", function () {
     // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
     it("Take out loan position", async function () {
-      const ownerBalance = await ethers.provider.getBalance(owner.address);
-      console.log("OWNER BALANCE:", ownerBalance);
+
+      const [errBeginning, liquidityBeginning, shortfallBeginning] = await joetrollerContract.getAccountLiquidity(owner.address);
+      console.log("LIQUIDITY BEGINNING:", liquidityBeginning);
+      console.log("SHORTFUL BEGINNING:", shortfallBeginning);
 
       /// 0. Swap AVAX for 1 LINK.e
       /// Note: 0.165 AVAX ~= 1 LINK.e
@@ -141,6 +143,7 @@ describe("JoeLiquidator", function () {
       // Supply LINK.e to jLINK.e contract
       const mintLINKETxn = await jLINKEContract.connect(owner).mint(amountOfLINKEToSupply);
       await mintLINKETxn.wait();
+      console.log("Supplying LINK.e as collateral to jLINK.e...");
 
       const jLINKEBalanceAfter = await jLINKEContract.balanceOf(owner.address);
       console.log("OWNER jLINK.e BALANCE AFTER", jLINKEBalanceAfter);
@@ -162,12 +165,13 @@ describe("JoeLiquidator", function () {
           .checkMembership(owner.address, JLINKE_ADDRESS)
       ).to.equal(true);
 
-      return;
-
       /// 3. Get account liquidity in protocol before borrow
       const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY BEFORE BORROW:", liquidityBeforeBorrow);
       console.log("SHORTFUL BEFORE BORROW:", shortfallBeforeBorrow);
+
+      return;
+
 
       /// 4. Fetch borrow rate per second for jLINKE
       const jLINKEBorrowRatePerSecond = await jLINKEContract.borrowRatePerSecond();
