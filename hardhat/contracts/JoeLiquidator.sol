@@ -174,52 +174,15 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     ) external override returns (bytes32) {
         require(
             Joetroller(joetrollerAddress).isMarketListed(msg.sender),
-            "JoeLiquidator: Untrusted message sender"
+            "JoeLiquidator: Untrusted message sender calling onFlashLoan"
         );
 
-        // Use block scoping and structs to avoid stack too deep errors.
-        // See https://soliditydeveloper.com/stacktoodeep to learn more.
-        LiquidationData memory liquidationData;
-        {
-            (
-                address initiator,
-                address borrowerToLiquidate,
-                address flashLoanedTokenAddress,
-                address jRepayTokenAddress,
-                uint256 flashLoanAmount,
-                uint256 repayAmount,
-                address jSeizeTokenAddress
-            ) = abi.decode(
-                    _data,
-                    (
-                        address,
-                        address,
-                        address,
-                        address,
-                        uint256,
-                        uint256,
-                        address
-                    )
-                );
-
-            require(
-                _initiator == initiator,
-                "JoeLiquidator: Untrusted loan initiator"
-            );
-            require(
-                _flashLoanTokenAddress == flashLoanedTokenAddress,
-                "JoeLiquidator: Encoded data (flashLoanedTokenAddress) does not match"
-            );
-            require(
-                _flashLoanAmount == flashLoanAmount,
-                "JoeLiquidator: Encoded data (flashLoanAmount) does not match"
-            );
-
-            liquidationData.borrowerToLiquidate = borrowerToLiquidate;
-            liquidationData.jRepayTokenAddress = jRepayTokenAddress;
-            liquidationData.repayAmount = repayAmount;
-            liquidationData.jSeizeTokenAddress = jSeizeTokenAddress;
-        }
+        LiquidationData memory liquidationData = _getLiquidationData(
+            _initiator,
+            _flashLoanTokenAddress,
+            _flashLoanAmount,
+            _data
+        );
 
         // Approve flash loan lender to retrieve loan amount + fee from us
         ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
@@ -266,6 +229,49 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         // _transferProfitedAVAXToLiquidator(_initiator);
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
+    }
+
+    function _getLiquidationData(
+        address _initiator,
+        address _flashLoanTokenAddress,
+        uint256 _flashLoanAmount,
+        bytes calldata _data
+    ) internal pure returns (LiquidationData memory) {
+        // Use block scoping and structs to avoid stack too deep errors.
+        // See https://soliditydeveloper.com/stacktoodeep to learn more.
+        LiquidationData memory liquidationData;
+        (
+            address initiator,
+            address borrowerToLiquidate,
+            address flashLoanedTokenAddress,
+            address jRepayTokenAddress,
+            uint256 flashLoanAmount,
+            uint256 repayAmount,
+            address jSeizeTokenAddress
+        ) = abi.decode(
+                _data,
+                (address, address, address, address, uint256, uint256, address)
+            );
+
+        require(
+            _initiator == initiator,
+            "JoeLiquidator: Untrusted loan initiator"
+        );
+        require(
+            _flashLoanTokenAddress == flashLoanedTokenAddress,
+            "JoeLiquidator: Encoded data (flashLoanedTokenAddress) does not match"
+        );
+        require(
+            _flashLoanAmount == flashLoanAmount,
+            "JoeLiquidator: Encoded data (flashLoanAmount) does not match"
+        );
+
+        liquidationData.borrowerToLiquidate = borrowerToLiquidate;
+        liquidationData.jRepayTokenAddress = jRepayTokenAddress;
+        liquidationData.repayAmount = repayAmount;
+        liquidationData.jSeizeTokenAddress = jSeizeTokenAddress;
+
+        return liquidationData;
     }
 
     // function _transferProfitedAVAXToLiquidator(address _liquidator) internal {
