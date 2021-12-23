@@ -71,7 +71,7 @@ describe("JoeLiquidator", function () {
     joeLiquidatorContract = await JoeLiquidatorContractFactory.deploy(
       JOETROLLER_ADDRESS,
       JOE_ROUTER_02_ADDRESS,
-      JAVAX_ADDRESS,
+      JUSDCE_ADDRESS,
       JWETHE_ADDRESS
     );
 
