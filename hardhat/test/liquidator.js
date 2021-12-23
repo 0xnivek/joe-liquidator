@@ -39,6 +39,17 @@ const SECONDS_IN_MINUTE = 60;
 const SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
 const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
 
+const getTxnLogs = (contract, txnReceipt) => {
+  const logs = [];
+  for (const log of txnReceipt.logs) {
+    try {
+      logs.push(contract.interface.parseLog(log));
+    } catch (err) {
+      // Means that log isn't an event emitted from our contract
+    }
+  }
+  return logs;
+}
 
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
@@ -236,7 +247,41 @@ describe("JoeLiquidator", function () {
       /// 8. Liquidate account!
       console.log("Starting liquidation...");
       const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(owner.address, JUSDTE_ADDRESS, JLINKE_ADDRESS);
-      await liquidateTxn.wait();
+      const liquidationTxnReceipt = await liquidateTxn.wait();
+      console.log("LIQUIDATION RECEIPT:", liquidationTxnReceipt);
+
+      const liquidationTxnLogs = getTxnLogs(joeLiquidatorContract, liquidationTxnReceipt);
+
+      expect(liquidationTxnLogs.length).to.equal(1);
+
+      const liquidationEventLog = liquidationTxnLogs[0];
+
+      expect(liquidationEventLog.name).to.equal('LiquidationEvent');
+
+      const [
+        borrowerLiquidated,
+        jRepayTokenAddress,
+        jSeizeTokenAddress,
+        repayAmount,
+        profitedAvax,
+        ...rest
+      ] = liquidationEventLog.args;
+      console.log(liquidationEventLog.args);
+
+      expect(borrowerLiquidated).to.equal(owner.address);
+      expect(jRepayTokenAddress).to.equal(JUSDTE_ADDRESS);
+      expect(jSeizeTokenAddress).to.equal(JLINKE_ADDRESS);
+      expect(repayAmount.gt(0)).to.equal(true);
+      expect(profitedAvax.gt(0)).to.equal(true);
+
+      console.log(
+        `Successfully liquidated ${borrowerLiquidated} for jRepayToken ${jRepayTokenAddress} ` +
+        `and jSeizeToken ${jSeizeTokenAddress}.`
+      );
+      console.log(
+        `Amount repaid was ${repayAmount} and profited ${ethers.utils.formatEther(profitedAvax)} AVAX!`
+      );
+
     });
   });
 

@@ -45,7 +45,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address indexed _borrowerLiquidated,
         address _jRepayToken,
         address _jSeizeToken,
-        uint256 _amountRepayed,
+        uint256 _repayAmount,
         uint256 _profitedAVAX
     );
 
@@ -304,7 +304,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         emit LiquidationEvent(
             liquidationData.borrowerToLiquidate,
-            jRepayToken.underlying(),
+            liquidationData.jRepayTokenAddress,
             liquidationData.jSeizeTokenAddress,
             liquidationData.repayAmount,
             profitedAVAX
