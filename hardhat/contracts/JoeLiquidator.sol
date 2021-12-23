@@ -356,10 +356,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
     function _swapRemainingSeizedTokenToAVAX(
         address _initiator,
-        address _jSeizeTokenUnderlyingAddress
+        address _jSeizeTokenAddress
     ) internal {
+        JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
+        address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
+
         // Swap seized token to AVAX
-        ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
+        ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
         uint256 remainingSeizeAmount = seizeToken.balanceOf(address(this));
 
         require(
@@ -370,35 +373,66 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
 
         address[] memory swapPath = new address[](2);
-        swapPath[0] = _jSeizeTokenUnderlyingAddress;
+        swapPath[0] = jSeizeTokenUnderlyingAddress;
         swapPath[1] = WAVAX;
-        JoeRouter02(joeRouter02Address).swapExactTokensForAVAX(
-            remainingSeizeAmount, // amountIn
-            0, // amountOutMin
-            swapPath, // path
-            _initiator, // to
-            block.timestamp // deadline
+
+        uint256[] memory amounts = JoeRouter02(joeRouter02Address)
+            .swapExactTokensForAVAX(
+                remainingSeizeAmount, // amountIn
+                0, // amountOutMin
+                swapPath, // path
+                _initiator, // to
+                block.timestamp // deadline
+            );
+
+        console.log(
+            "[JoeLiquidator] Successfully transferred all profitted AVAX! (%d, %d)",
+            amounts[0],
+            amounts[1]
         );
     }
 
     function _swapSeizeTokenToFlashLoanToken(
-        address _jSeizeTokenUnderlyingAddress,
+        address _jSeizeTokenAddress,
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmountToRepay
     ) internal {
+        console.log(
+            "[JoeLiquidator] Swapping seize tokens to flash tokens to repay flash loan total (%d)...",
+            _flashLoanAmountToRepay
+        );
+        JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
+        address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
+
         // Calculate amount of underlying seize token we need
         // to swap in order to pay back the flash loan amount + fee
         address[] memory swapPath = new address[](2);
-        swapPath[0] = _jSeizeTokenUnderlyingAddress;
+        swapPath[0] = jSeizeTokenUnderlyingAddress;
         swapPath[1] = _flashLoanTokenAddress;
+
+        console.log(
+            "[JoeLiquidator] Calculating amount of seize token to swap with path:"
+        );
+        console.logAddress(jSeizeTokenUnderlyingAddress);
+        console.logAddress(_flashLoanTokenAddress);
 
         uint256 amountOfSeizeTokenToSwap = JoeRouter02(joeRouter02Address)
             .getAmountsIn(_flashLoanAmountToRepay, swapPath)[0];
 
+        console.log(
+            "[JoeLiquidator] Amount of seize tokens to swap to flash token (%d)...",
+            amountOfSeizeTokenToSwap
+        );
+
         // Approve router to transfer `amountOfSeizeTokenToSwap` underlying
         // seize tokens
-        ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
+        ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
         seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
+
+        console.log(
+            "[JoeLiquidator] Amount of seize tokens we possess (%d)...",
+            seizeToken.balanceOf(address(this))
+        );
 
         // Swap seized token to flash loan token
         JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
@@ -469,6 +503,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             err == 0,
             "JoeLiquidator: Error occurred trying to redeem underlying seize tokens"
         );
+        console.log(
+            "[JoeLiquidator] Successfully redeemed %d jSeizeTokens with address:",
+            amountOfJSeizeTokensToRedeem
+        );
+        console.logAddress(_jSeizeTokenAddress);
     }
 
     function _swapFlashLoanTokenToRepayToken(
