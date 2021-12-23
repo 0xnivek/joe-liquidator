@@ -231,7 +231,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             flashLoanAmountToRepay
         );
 
-        // Convert any remaining seized token to native AVAX
+        // Convert any remaining seized token to native AVAX and send
+        // to liquidator
         _swapRemainingSeizedTokenToAVAX(
             _initiator,
             liquidationData.jSeizeTokenAddress
@@ -329,16 +330,23 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmountToRepay
     ) internal {
-        // Swap seized token to flash loan token
-        ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
-        uint256 seizeAmount = seizeToken.balanceOf(address(this));
-        seizeToken.approve(joeRouter02Address, seizeAmount);
-
+        // Calculate amount of underlying seize token we need
+        // to swap in order to pay back the flash loan amount + fee
         address[] memory swapPath = new address[](2);
         swapPath[0] = _jSeizeTokenUnderlyingAddress;
         swapPath[1] = _flashLoanTokenAddress;
+
+        uint256 amountOfSeizeTokenToSwap = JoeRouter02(joeRouter02Address)
+            .getAmountsIn(_flashLoanAmountToRepay, swapPath)[0];
+
+        // Approve router to transfer `amountOfSeizeTokenToSwap` underlying
+        // seize tokens
+        ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
+        seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
+
+        // Swap seized token to flash loan token
         JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
-            seizeAmount, // amountIn
+            amountOfSeizeTokenToSwap, // amountIn
             _flashLoanAmountToRepay, // amountOutMin
             swapPath, // path
             address(this), // to
