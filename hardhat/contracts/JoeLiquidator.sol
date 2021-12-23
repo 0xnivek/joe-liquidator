@@ -213,7 +213,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             "JoeLiquidator: Expected to have enough underlying repay token to liquidate borrow position."
         );
 
-        // Perform liquidation using underlying repay token and receive seize token in return.
+        // Perform liquidation using underlying repay token and receive jSeizeTokens in return.
         _liquidateBorrow(
             jRepayToken,
             liquidationData.borrowerToLiquidate,
@@ -221,8 +221,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             JTokenInterface(liquidationData.jSeizeTokenAddress)
         );
 
+        // Redeem jSeizeTokens for underlying seize tokens
+        _redeemSeizeToken(liquidationData.jSeizeTokenAddress);
+
         // Swap seize token to flash loan token to repay flashLoanAmountToRepay
-        _swapSeizedTokenToFlashLoanToken(
+        _swapSeizeTokenToFlashLoanToken(
             liquidationData.jSeizeTokenAddress,
             _flashLoanTokenAddress,
             flashLoanAmountToRepay
@@ -321,7 +324,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
     }
 
-    function _swapSeizedTokenToFlashLoanToken(
+    function _swapSeizeTokenToFlashLoanToken(
         address _jSeizeTokenUnderlyingAddress,
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmountToRepay
@@ -365,6 +368,22 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         require(
             err == 0,
             "JoeLiquidator: Error occurred trying to liquidateBorrow"
+        );
+    }
+
+    function _redeemSeizeToken(address _jSeizeTokenAddress) internal {
+        // Get amount of jSeizeToken's we have
+        uint256 amountOfJSeizeTokensToRedeem = JTokenInterface(
+            _jSeizeTokenAddress
+        ).balanceOf(address(this));
+
+        // Redeem `amountOfJSeizeTokensToRedeem` jSeizeTokens for underlying seize tokens
+        uint256 err = JErc20Interface(_jSeizeTokenAddress).redeem(
+            amountOfJSeizeTokensToRedeem
+        );
+        require(
+            err == 0,
+            "JoeLiquidator: Error occurred trying to redeem underlying seize tokens"
         );
     }
 

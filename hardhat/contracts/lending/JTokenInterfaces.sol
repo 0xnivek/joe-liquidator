@@ -31,6 +31,8 @@ interface JErc20Storage {
 interface JErc20Interface is JErc20Storage {
     function borrow(uint256 borrowAmount) external returns (uint256);
 
+    function redeem(uint256 redeemTokens) external returns (uint256);
+
     function repayBorrow(uint256 repayAmount) external returns (uint256);
 
     function liquidateBorrow(
