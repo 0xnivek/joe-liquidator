@@ -227,7 +227,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             remainingSeizeAmount, // amountIn
             0, // amountOutMin
             swapPath, // path
-            WAVAX, // to
+            address(this), // to
             block.timestamp // deadline
         );
     }
@@ -250,7 +250,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             seizeAmount, // amountIn
             _flashLoanAmountToRepay, // amountOutMin
             swapPath, // path
-            _flashLoanTokenAddress, // to
+            address(this), // to
             block.timestamp // deadline
         );
     }
@@ -299,7 +299,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             _flashLoanAmount, // amountIn
             _repayAmount, // amountOutMin
             swapPath, // path
-            _jRepayTokenUnderlyingAddress, // to
+            address(this), // to
             block.timestamp // deadline
         );
     }
