@@ -106,23 +106,24 @@ describe("JoeLiquidator", function () {
       // Approve JoeRouter 0.5 WAVAX
       const approveJoeRouterWAVAXTxn = await wavaxContract.connect(owner).approve(JOE_ROUTER_02_ADDRESS, amountOfAVAXToSwap);
       await approveJoeRouterWAVAXTxn.wait();
-
-      return;
+      console.log("Approved JoeRouter in WAVAX...");
 
       const linkeBalanceBeforeSwap = await linkeContract.balanceOf(owner.address);
+      expect(linkeBalanceBeforeSwap.eq(0)).to.equal(true);
       console.log("LINKE BALANCE BEFORE SWAP:", linkeBalanceBeforeSwap);
 
       const currentBlock = await ethers.provider.getBlock();
       const swapAVAXForLINKE = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
         ethers.utils.parseEther("1"),
-        [WAVAX],
-        LINKE,
+        [WAVAX, LINKE],
+        owner.address,
         currentBlock.timestamp + SECONDS_IN_MINUTE,
-        { value: ethers.utils.parseEther("0.2") }
+        { value: amountOfAVAXToSwap }
       );
       await swapAVAXForLINKE.wait();
 
       const linkeBalanceAfterSwap = await linkeContract.balanceOf(owner.address);
+      expect(linkeBalanceAfterSwap.gt(0)).to.equal(true);
       console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
 
       return;
