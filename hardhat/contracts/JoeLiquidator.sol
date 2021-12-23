@@ -205,8 +205,15 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             liquidationData.repayAmount
         );
 
-        // Perform liquidation by repaying borrow position using newly obtained
-        // borrow token and receive seize token in return.
+        // Now we should have `liquidationData.repayAmount` of underlying repay tokens
+        // to liquidate the borrow position.
+        require(
+            ERC20(jRepayToken.underlying()).balanceOf(address(this)) ==
+                liquidationData.repayAmount,
+            "JoeLiquidator: Expected to have enough underlying repay token to liquidate borrow position."
+        );
+
+        // Perform liquidation using underlying repay token and receive seize token in return.
         _performLiquidation(
             jRepayToken,
             liquidationData.borrowerToLiquidate,
@@ -368,6 +375,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 _repayAmount
     ) internal {
         // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
+        // Approve JoeRouter to transfer our flash loaned token so that we can swap for
+        // the underlying repay token
         ERC20(_flashLoanedTokenAddress).approve(
             joeRouter02Address,
             _flashLoanAmount
