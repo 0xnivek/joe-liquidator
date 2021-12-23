@@ -95,6 +95,9 @@ describe("JoeLiquidator", function () {
 
     // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
     it("Take out loan position", async function () {
+      // Increase default timeout from 20s to 60s
+      this.timeout(60000)
+
       const [errBeginning, liquidityBeginning, shortfallBeginning] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY BEGINNING:", liquidityBeginning);
       console.log("SHORTFUL BEGINNING:", shortfallBeginning);

@@ -454,6 +454,19 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jRepayTokenUnderlyingAddress,
         uint256 _repayAmount
     ) internal {
+        console.log(
+            "[JoeLiquidator] Swapping flash loan token (posses %d) for repay token (need %d)...",
+            _flashLoanAmount,
+            _repayAmount
+        );
+        console.log(
+            "[JoeLiquidator] Recalculating flash loan amount needed (%d)...",
+            _getFlashLoanAmount(
+                _jRepayTokenUnderlyingAddress,
+                _repayAmount,
+                false
+            )
+        );
         // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
         // Approve JoeRouter to transfer our flash loaned token so that we can swap for
         // the underlying repay token
@@ -488,7 +501,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     function _getFlashLoanAmount(
-        address _underlyingBorrowToken,
+        address _underlyingRepayToken,
         uint256 _repayAmount,
         bool _isRepayTokenUSDCE
     ) internal view returns (uint256) {
@@ -498,7 +511,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         } else {
             path[0] = USDCE;
         }
-        path[1] = _underlyingBorrowToken;
+        path[1] = _underlyingRepayToken;
         return
             JoeRouter02(joeRouter02Address).getAmountsIn(_repayAmount, path)[0];
     }
