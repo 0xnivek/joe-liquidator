@@ -223,49 +223,6 @@ describe("JoeLiquidator", function () {
       console.log("LIQUIDITY AFTER MINING:", liquidityAfterMining);
       console.log("SHORTFALL AFTER MINING:", shortfallAfterMining);
     });
-
-    xit("Take out loan and mine blocks until account health < 0", async function () {
-      // ~ 999 AVAX
-      // const ownerBalance = await ethers.provider.getBalance(owner.address);
-      // console.log("OWNER BALANCE:", ownerBalance);
-
-      const jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
-
-      // console.log(jLINKEContract)
-
-      // const beforeProtocolBorrows = await jLINKEContract.totalBorrows();
-      // console.log("BEFORE PROTOCOL BORROWS", beforeProtocolBorrows);
-
-      const linkEContract = await ethers.getContractAt("ERC20", LINKE);
-      const beforeOwnerBalance = await linkEContract.balanceOf(owner.address);
-      console.log("BEFORE LINKE OWNER BALANCE", beforeOwnerBalance);
-
-      // Take loan of 10 Link.e using AVAX as collateral (1 LINK.e ~= 0.168 AVAX)
-      const tenLinkE = ethers.utils.parseUnits("10", 8);
-      const borrowTxn = await jLINKEContract.connect(owner).borrow(tenLinkE);
-      console.log(await borrowTxn.wait());
-
-      // const afterProtocolBorrows = await jLINKEContract.totalBorrows();
-      // console.log("AFTER PROTOCOL BORROWS", afterProtocolBorrows);
-
-      const afterOwnerBalance = await linkEContract.balanceOf(owner.address);
-      console.log("AFTER LINKE OWNER BALANCE", afterOwnerBalance);
-
-    });
   });
-
-  // describe("Test getAmountOfUSDCEToFlashLoan", function () {
-  //   it("Calculate amount of USDC.e needed for 100 Link.e", async function () {
-  //     // Assuming the borrow position to repay is 100 Link.e, we
-  //     // expect to have to borrow 1905.81 USDC.e
-  //     // ethers.utils.parseUnits("121.0", 9) => { BigNumber: "121000000000" }
-  //     console.log(
-  //       await joeLiquidatorContract.connect(owner).getAmountOfUSDCEToFlashLoan(
-  //         joeLiquidatorContract.LINKE(),
-  //         ethers.utils.parseEther("100")
-  //       )
-  //     );
-  //   });
-  // });
 
 });
