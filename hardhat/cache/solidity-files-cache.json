@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640200783933,
-      "contentHash": "221bf5a2c07c81a0efed3ec673945e58",
+      "lastModificationDate": 1640223139383,
+      "contentHash": "87a24c2b0af6093cfc92d3be1d4f683e",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -67,7 +67,7 @@
         "./interfaces/ERC20Interface.sol",
         "./interfaces/ERC3156FlashBorrowerInterface.sol",
         "./interfaces/ERC3156FlashLenderInterface.sol",
-        "./interfaces/IWAVAX.sol",
+        "./interfaces/WAVAXInterface.sol",
         "./lending/JTokenInterfaces.sol",
         "./lending/JoeRouter02.sol",
         "./lending/JoetrollerInterface.sol",
@@ -197,7 +197,7 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/ERC20Interface.sol": {
-      "lastModificationDate": 1640151024245,
+      "lastModificationDate": 1640223103473,
       "contentHash": "e61ef640afe8b8dd3e9e5b9863be2a9a",
       "sourceName": "contracts/interfaces/ERC20Interface.sol",
       "solcConfig": {
@@ -232,8 +232,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoeRouter02.sol": {
-      "lastModificationDate": 1640151855605,
-      "contentHash": "749591103887acee43d61f04ada65c9e",
+      "lastModificationDate": 1640221933714,
+      "contentHash": "a507587e03198bd56c6dfce59d737485",
       "sourceName": "contracts/lending/JoeRouter02.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -264,41 +264,6 @@
       ],
       "artifacts": [
         "JoeRouter02"
-      ]
-    },
-    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/IWAVAX.sol": {
-      "lastModificationDate": 1640152153777,
-      "contentHash": "f337ed8241764fd071fede6f4166b1ea",
-      "sourceName": "contracts/interfaces/IWAVAX.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.3"
-      ],
-      "artifacts": [
-        "IWAVAX"
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoetrollerInterface.sol": {
@@ -336,6 +301,41 @@
       ],
       "artifacts": [
         "Joetroller"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/WAVAXInterface.sol": {
+      "lastModificationDate": 1640223134635,
+      "contentHash": "42560392a228bb553794b6058fde179a",
+      "sourceName": "contracts/interfaces/WAVAXInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "WAVAXInterface"
       ]
     }
   }

@@ -41,8 +41,11 @@ const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
+  let joeRouterContract;
   let jAVAXContract;
   let jLINKEContract;
+  let wavaxContract;
+  let linkeContract;
 
   let owner;
   let addr1;
@@ -69,8 +72,11 @@ describe("JoeLiquidator", function () {
     );
 
     joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
+    joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
     jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
+    wavaxContract = await ethers.getContractAt("WAVAXInterface", WAVAX);
+    linkeContract = await ethers.getContractAt("ERC20", LINKE);
 
     [owner, addr1, addr2] = await ethers.getSigners();
   });
@@ -80,6 +86,39 @@ describe("JoeLiquidator", function () {
     it("Take out loan position", async function () {
       const ownerBalance = await ethers.provider.getBalance(owner.address);
       console.log("OWNER BALANCE:", ownerBalance);
+
+      /// 0. Swap AVAX for 1 LINK.e
+      /// Note: 0.165 AVAX ~= 1 LINK.e
+      const amountOfAVAXToSwap = ethers.utils.parseEther("0.5");
+
+      const wavaxBalanceBeforeDeposit = await wavaxContract.balanceOf(owner.address);
+      console.log("WAVAX BALANCE BEFORE DEPOSIT:", wavaxBalanceBeforeDeposit);
+
+      const wavaxDepositTxn = await wavaxContract.connect(owner).deposit({ value: amountOfAVAXToSwap });
+      await wavaxDepositTxn.wait();
+
+      const wavaxBalanceAfterDeposit = await wavaxContract.balanceOf(owner.address);
+      console.log("WAVAX BALANCE AFTER DEPOSIT:", wavaxBalanceAfterDeposit);
+
+      return;
+
+      const linkeBalanceBeforeSwap = await linkeContract.balanceOf(owner.address);
+      console.log("LINKE BALANCE BEFORE SWAP:", linkeBalanceBeforeSwap);
+
+      const currentBlock = await ethers.provider.getBlock();
+      const swapAVAXForLINKE = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
+        ethers.utils.parseEther("1"),
+        [WAVAX],
+        LINKE,
+        currentBlock.timestamp + SECONDS_IN_MINUTE,
+        { value: ethers.utils.parseEther("0.2") }
+      );
+      await swapAVAXForLINKE.wait();
+
+      const linkeBalanceAfterSwap = await linkeContract.balanceOf(owner.address);
+      console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
+
+      return;
 
       /// 1. Supply 1 AVAX to jAVAX contract as collateral and obtain jAVAX in return
       const javaxBalanceBefore = await jAVAXContract.balanceOf(owner.address);

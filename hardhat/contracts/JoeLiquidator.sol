@@ -4,7 +4,7 @@ pragma solidity ^0.8.3;
 import "./interfaces/ERC20Interface.sol";
 import "./interfaces/ERC3156FlashBorrowerInterface.sol";
 import "./interfaces/ERC3156FlashLenderInterface.sol";
-import "./interfaces/IWAVAX.sol";
+import "./interfaces/WAVAXInterface.sol";
 import "./lending/JTokenInterfaces.sol";
 import "./lending/JoeRouter02.sol";
 import "./lending/JoetrollerInterface.sol";
