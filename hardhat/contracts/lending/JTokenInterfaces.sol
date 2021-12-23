@@ -34,6 +34,8 @@ interface JErc20Interface is JErc20Storage {
         uint256 repayAmount,
         JTokenInterface jTokenCollateral
     ) external returns (uint256);
+
+    function mint(uint256 mintAmount) external returns (uint256);
 }
 
 interface JWrappedNativeInterface is JErc20Interface {

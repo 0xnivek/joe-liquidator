@@ -126,23 +126,27 @@ describe("JoeLiquidator", function () {
       expect(linkeBalanceAfterSwap.gt(0)).to.equal(true);
       console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
 
+      /// 1. Supply 1 LINK.e to jLINK contract as collateral and obtain jLINK.e in return
+      const jLINKEBalanceBefore = await jLINKEContract.balanceOf(owner.address);
+      console.log("OWNER jLINK.e BALANCE BEFORE", jLINKEBalanceBefore);
+      expect(jLINKEBalanceBefore).to.equal(0);
+
+      // Note: LINK.e is 18 decimals
+      const amountOfLINKEToSupply = ethers.utils.parseEther("1");
+
+      // Approve jLINK.e contract to take LINK.e
+      const approveJLINKETxn = await linkeContract.connect(owner).approve(JLINKE_ADDRESS, amountOfLINKEToSupply)
+      await approveJLINKETxn.wait();
+
+      // Supply LINK.e to jLINK.e contract
+      const mintLINKETxn = await jLINKEContract.connect(owner).mint(amountOfLINKEToSupply);
+      await mintLINKETxn.wait();
+
+      const jLINKEBalanceAfter = await jLINKEContract.balanceOf(owner.address);
+      console.log("OWNER jLINK.e BALANCE AFTER", jLINKEBalanceAfter);
+      expect(jLINKEBalanceAfter.gt(0)).to.equal(true);
+
       return;
-
-      /// 1. Supply 1 AVAX to jAVAX contract as collateral and obtain jAVAX in return
-      const javaxBalanceBefore = await jAVAXContract.balanceOf(owner.address);
-      expect(javaxBalanceBefore).to.equal(0);
-
-      console.log("OWNER JAVAX BALANCE BEFORE", javaxBalanceBefore);
-
-      // Note: AVAX is 18 decimals
-      // const amountOfAVAXToSupply = ethers.utils.parseUnits("1", 8);
-      const amountOfAVAXToSupply = ethers.utils.parseEther("1");
-      const mintNativeTxn = await jAVAXContract.connect(owner).mintNative({ value: amountOfAVAXToSupply });
-      await mintNativeTxn.wait();
-
-      const javaxBalanceAfter = await jAVAXContract.balanceOf(owner.address);
-      console.log("OWNER JAVAX BALANCE AFTER", javaxBalanceAfter);
-      expect(javaxBalanceAfter.gt(0)).to.equal(true);
 
       /// 2. Enter market via Joetroller for jAVAX for AVAX as collateral
       expect(
