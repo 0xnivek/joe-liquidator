@@ -24,10 +24,3 @@ interface Joetroller {
             uint256
         );
 }
-
-interface JoetrollerInterfaceExtension {
-    function checkMembership(address account, JToken jToken)
-        external
-        view
-        returns (bool);
-}

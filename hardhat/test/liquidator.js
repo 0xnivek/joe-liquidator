@@ -41,7 +41,6 @@ const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
-  let joetrollerExtensionContract;
   let jAVAXContract;
   let jLINKEContract;
 
@@ -70,7 +69,6 @@ describe("JoeLiquidator", function () {
     );
 
     joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
-    joetrollerExtensionContract = await ethers.getContractAt("JoetrollerInterfaceExtension", JOETROLLER_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
     jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
 
@@ -80,18 +78,24 @@ describe("JoeLiquidator", function () {
   describe("Test liquidation", function () {
     // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
     it("Take out loan position", async function () {
+      const ownerBalance = await ethers.provider.getBalance(owner.address);
+      console.log("OWNER BALANCE:", ownerBalance);
+
       /// 1. Supply 1 AVAX to jAVAX contract as collateral and obtain jAVAX in return
       const javaxBalanceBefore = await jAVAXContract.balanceOf(owner.address);
       expect(javaxBalanceBefore).to.equal(0);
 
       console.log("OWNER JAVAX BALANCE BEFORE", javaxBalanceBefore);
 
-      const mintNativeTxn = await jAVAXContract.connect(owner).mintNative({ value: ethers.utils.parseEther("1") });
-      await mintNativeTxn.wait()
+      // Note: AVAX is 18 decimals
+      // const amountOfAVAXToSupply = ethers.utils.parseUnits("1", 8);
+      const amountOfAVAXToSupply = ethers.utils.parseEther("1");
+      const mintNativeTxn = await jAVAXContract.connect(owner).mintNative({ value: amountOfAVAXToSupply });
+      await mintNativeTxn.wait();
 
       const javaxBalanceAfter = await jAVAXContract.balanceOf(owner.address);
-      expect(javaxBalanceAfter.gt(0)).to.equal(true);
       console.log("OWNER JAVAX BALANCE AFTER", javaxBalanceAfter);
+      expect(javaxBalanceAfter.gt(0)).to.equal(true);
 
       /// 2. Enter market via Joetroller for jAVAX for AVAX as collateral
       expect(
@@ -104,9 +108,10 @@ describe("JoeLiquidator", function () {
           .checkMembership(owner.address, JAVAX_ADDRESS)
       ).to.equal(true);
 
-      /// 3. Get account liquidity in protocol
-      const [err, liquidity, shortfall] = await joetrollerContract.getAccountLiquidity(owner.address);
-      console.log("LIQUIDITY:", liquidity);
+      /// 3. Get account liquidity in protocol before borrow
+      const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
+      console.log("LIQUIDITY BEFORE BORROW:", liquidityBeforeBorrow);
+      console.log("SHORTFUL BEFORE BORROW:", shortfallBeforeBorrow);
 
       /// 4. Fetch borrow rate per second for jLINKE
       const jLINKEBorrowRatePerSecond = await jLINKEContract.borrowRatePerSecond();
@@ -119,7 +124,7 @@ describe("JoeLiquidator", function () {
       /// 6. Borrow LINK.e from jLINKE contract.
       /// Note: 
       /// 1. 0.75 AVAX ~= 4.4122 LINK.E so we should borrow 4.0 LINK.e
-      /// 2. LINK.e has 8 decimals
+      /// 2. LINK.e has 18 decimals
 
       // Confirm jLINK.e borrowBalanceCurrent is 0 before we borrow
       const jLINKEBorrowBalanceBefore = await jLINKEContract.borrowBalanceCurrent(owner.address);
@@ -128,23 +133,39 @@ describe("JoeLiquidator", function () {
 
       // Borrow 4.0 LINK.e from jLINK.e contract
       console.log("Borrowing...");
-      const amountOfLinkEToBorrow = ethers.utils.parseUnits("4", 8);
+      // const amountOfLinkEToBorrow = ethers.utils.parseUnits("4", 8);
+      const amountOfLinkEToBorrow = ethers.utils.parseEther("4.4", 18);
       const borrowTxn = await jLINKEContract.connect(owner).borrow(amountOfLinkEToBorrow);
       // Have to call `wait` to get transaction mined.
       await borrowTxn.wait();
 
       // Confirm jLINK.e borrowBalanceCurrent after borrow is 4.0 LINK.e
       const jLINKEBorrowBalanceAfter = await jLINKEContract.borrowBalanceCurrent(owner.address);
-      expect(jLINKEBorrowBalanceAfter.eq(amountOfLinkEToBorrow)).to.equal(true);
       console.log("jLINKE BORROW BALANCE AFTER:", jLINKEBorrowBalanceAfter);
+      expect(jLINKEBorrowBalanceAfter.eq(amountOfLinkEToBorrow)).to.equal(true);
+
+      const [errAfterBorrow, liquidityAfterBorrow, shortfallAfterBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
+      console.log("LIQUIDITY AFTER BORROW:", liquidityAfterBorrow);
+      console.log("SHORTFALL AFTER BORROW:", shortfallAfterBorrow);
 
       /// 7. Increase time and mine block so that we can make account liquidatable!
-      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 7]);
-      await ethers.provider.send("evm_mine");
-
+      for (let i = 0; i < 1500; i++) {
+        // console.log("MINING BLOCK:", i);
+        let block = await ethers.provider.getBlock();
+        let blockNumber = block.number;
+        let blockTimeStamp = block.timestamp;
+        console.log(`NUMBER: ${blockNumber}, TIMESTAMP: ${blockTimeStamp}`);
+        await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 100]);
+        await ethers.provider.send("evm_mine");
+      }
 
       const jLINKEBorrowBalanceAfterMining = await jLINKEContract.borrowBalanceCurrent(owner.address);
       console.log("jLINKE BORROW BALANCE AFTER MINING:", jLINKEBorrowBalanceAfterMining);
+
+      // Confirm account has shortfall, a.k.a. can be liquidated 
+      const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(owner.address);
+      console.log("LIQUIDITY AFTER MINING:", liquidityAfterMining);
+      console.log("SHORTFALL AFTER MINING:", shortfallAfterMining);
     });
 
     xit("Take out loan and mine blocks until account health < 0", async function () {
