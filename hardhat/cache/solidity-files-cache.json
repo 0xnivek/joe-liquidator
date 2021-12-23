@@ -118,8 +118,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640225907877,
-      "contentHash": "44be7ba92371e754da0bb55de3a08d46",
+      "lastModificationDate": 1640227535792,
+      "contentHash": "08c6c1b5b6424975c155cf33e85b2c76",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",

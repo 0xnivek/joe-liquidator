@@ -131,10 +131,10 @@ describe("JoeLiquidator", function () {
       expect(linkeBalanceAfterSwap.gt(0)).to.equal(true);
       console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
 
-      /// 1. Supply 1 LINK.e to jLINK contract as collateral and obtain jLINK.e in return
-      const jLINKEBalanceBefore = await jLINKEContract.balanceOf(owner.address);
-      console.log("OWNER jLINK.e BALANCE BEFORE", jLINKEBalanceBefore);
-      expect(jLINKEBalanceBefore).to.equal(0);
+      /// 1. Supply 1 LINK.e to jLINK contract as collateral
+      const jLINKEBalanceUnderlyingBefore = await jLINKEContract.balanceOfUnderlying(owner.address);
+      console.log("OWNER jLINK.e BALANCE UNDERLYING BEFORE", jLINKEBalanceUnderlyingBefore);
+      expect(jLINKEBalanceUnderlyingBefore).to.equal(0);
 
       // Note: LINK.e is 18 decimals
       const amountOfLINKEToSupply = ethers.utils.parseEther("1");
@@ -148,12 +148,9 @@ describe("JoeLiquidator", function () {
       await mintLINKETxn.wait();
       console.log("Supplying LINK.e as collateral to jLINK.e...");
 
-      const jLINKEBalanceAfter = await jLINKEContract.balanceOf(owner.address);
-      console.log("OWNER jLINK.e BALANCE AFTER", jLINKEBalanceAfter);
-      expect(jLINKEBalanceAfter.gt(0)).to.equal(true);
-
-      // Get jLINKE collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
-      const jLINKECollateralFactor = 0.6;
+      const jLINKEBalanceUnderlyingAfter = await jLINKEContract.balanceOfUnderlying(owner.address);
+      console.log("OWNER jLINK.e BALANCE UNDERLYING AFTER", jLINKEBalanceUnderlyingAfter);
+      expect(jLINKEBalanceUnderlyingAfter.gt(0)).to.equal(true);
 
       // 0.6 LINK.E ~= 12.221 USDT.e
 
@@ -180,37 +177,38 @@ describe("JoeLiquidator", function () {
       expect(jUSDTEBorrowRatePerSecond.gt(0)).to.equal(true);
       console.log("jUSDT.e BORROW RATE PER SECOND:", jUSDTEBorrowRatePerSecond);
 
-      return;
 
-      /// 5. Get jAVAX collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
-      const jAVAXCollateralFactor = 0.75;
+      // 5. Get jLINKE collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
+      const jLINKECollateralFactor = 0.6;
 
-      /// 6. Borrow LINK.e from jLINKE contract.
+
+      /// 6. Borrow USDT.e from jUSDT.e contract.
       /// Note: 
-      /// 1. 0.75 AVAX ~= 4.4122 LINK.E so we should borrow 4.0 LINK.e
-      /// 2. LINK.e has 18 decimals
+      /// 1. 0.6 LINK.E ~= 12.221 USDT.e so we should borrow 11 USDT.e
+      /// 2. USDT.e has 6 decimals
 
-      // Confirm jLINK.e borrowBalanceCurrent is 0 before we borrow
-      const jLINKEBorrowBalanceBefore = await jLINKEContract.borrowBalanceCurrent(owner.address);
-      console.log("jLINKE BORROW BALANCE BEFORE:", jLINKEBorrowBalanceBefore);
-      expect(jLINKEBorrowBalanceBefore).to.equal(0);
+      // Confirm jUSDT.e borrowBalanceCurrent is 0 before we borrow
+      const jUSDTEBorrowBalanceBefore = await jUSDTEContract.borrowBalanceCurrent(owner.address);
+      console.log("jUSDT.e BORROW BALANCE BEFORE:", jUSDTEBorrowBalanceBefore);
+      expect(jUSDTEBorrowBalanceBefore).to.equal(0);
 
-      // Borrow 4.0 LINK.e from jLINK.e contract
+      // Borrow 11 USDT.e from jUSDT.e contract
       console.log("Borrowing...");
-      // const amountOfLinkEToBorrow = ethers.utils.parseUnits("4", 8);
-      const amountOfLinkEToBorrow = ethers.utils.parseEther("4.4", 18);
-      const borrowTxn = await jLINKEContract.connect(owner).borrow(amountOfLinkEToBorrow);
+      const amountOfUSDTEToBorrow = ethers.utils.parseUnits("11", 6);
+      const borrowTxn = await jUSDTEContract.connect(owner).borrow(amountOfUSDTEToBorrow);
       // Have to call `wait` to get transaction mined.
       await borrowTxn.wait();
 
       // Confirm jLINK.e borrowBalanceCurrent after borrow is 4.0 LINK.e
-      const jLINKEBorrowBalanceAfter = await jLINKEContract.borrowBalanceCurrent(owner.address);
-      console.log("jLINKE BORROW BALANCE AFTER:", jLINKEBorrowBalanceAfter);
-      expect(jLINKEBorrowBalanceAfter.eq(amountOfLinkEToBorrow)).to.equal(true);
+      const jUSDTEBorrowBalanceAfter = await jUSDTEContract.borrowBalanceCurrent(owner.address);
+      console.log("jUSDT.e BORROW BALANCE AFTER:", jUSDTEBorrowBalanceAfter);
+      expect(jUSDTEBorrowBalanceAfter.eq(amountOfUSDTEToBorrow)).to.equal(true);
 
       const [errAfterBorrow, liquidityAfterBorrow, shortfallAfterBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY AFTER BORROW:", liquidityAfterBorrow);
       console.log("SHORTFALL AFTER BORROW:", shortfallAfterBorrow);
+
+      return;
 
       /// 7. Increase time and mine block so that we can make account liquidatable!
       for (let i = 0; i < 1500; i++) {

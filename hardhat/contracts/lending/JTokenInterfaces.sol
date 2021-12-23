@@ -10,6 +10,8 @@ interface JTokenStorage {
 interface JTokenInterface is JTokenStorage {
     function balanceOf(address owner) external view returns (uint256);
 
+    function balanceOfUnderlying(address owner) external view returns (uint256);
+
     function borrowRatePerSecond() external view returns (uint256);
 
     function borrowBalanceCurrent(address account)
