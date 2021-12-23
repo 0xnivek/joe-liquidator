@@ -19,7 +19,6 @@ use(solidity);
 const ONLY_OWNER_ERROR_MSG = "Ownable: caller is not the owner";
 const JOETROLLER_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
 const JOE_ROUTER_02_ADDRESS = "0x60aE616a2155Ee3d9A68541Ba4544862310933d4";
-const PRICE_ORACLE_ADDRESS = "0xd7Ae651985a871C1BC254748c40Ecc733110BC2E";
 const JAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
 const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
 const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
@@ -55,7 +54,6 @@ describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
-  let priceOracleContract;
   let jAVAXContract;
   let jLINKEContract;
   let jUSDTEContract;
@@ -88,7 +86,6 @@ describe("JoeLiquidator", function () {
 
     joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
     joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
-    priceOracleContract = await ethers.getContractAt("PriceOracle", PRICE_ORACLE_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
     jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
     jUSDTEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JUSDTE_ADDRESS);
@@ -99,13 +96,8 @@ describe("JoeLiquidator", function () {
   });
 
   describe("Test liquidation", function () {
-
-    xit("Test priceOracle", async function () {
-      console.log(await priceOracleContract.getUnderlyingPrice(JLINKE_ADDRESS));
-    });
-
     // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
-    it("Take out loan position", async function () {
+    it("Test liquidating borrow position of USDT.e and supply position of LINK.e", async function () {
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 
@@ -281,7 +273,6 @@ describe("JoeLiquidator", function () {
       console.log(
         `Amount repaid was ${repayAmount} and profited ${ethers.utils.formatEther(profitedAvax)} AVAX!`
       );
-
     });
   });
 
