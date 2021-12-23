@@ -41,6 +41,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 repayAmount;
     }
 
+    event LiquidationEvent(
+        address indexed _borrowerLiquidated,
+        address _jRepayToken,
+        address _jSeizeToken,
+        uint256 _amountRepayed,
+        uint256 _profitedAVAX
+    );
+
     constructor(
         address _joetrollerAddress,
         address _joeRouter02Address,
@@ -289,13 +297,18 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         // Convert any remaining seized token to native AVAX and send
         // to liquidator
-        _swapRemainingSeizedTokenToAVAX(
+        uint256 profitedAVAX = _swapRemainingSeizedTokenToAVAX(
             _initiator,
             liquidationData.jSeizeTokenAddress
         );
 
-        // // Transfer profited AVAX to liquidator
-        // _transferProfitedAVAXToLiquidator(_initiator);
+        emit LiquidationEvent(
+            liquidationData.borrowerToLiquidate,
+            jRepayToken.underlying(),
+            liquidationData.jSeizeTokenAddress,
+            liquidationData.repayAmount,
+            profitedAVAX
+        );
 
         // ********************************************************************
         // Our custom logic ends here...
@@ -346,18 +359,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         return liquidationData;
     }
 
-    // function _transferProfitedAVAXToLiquidator(address _liquidator) internal {
-    //     (bool success, ) = _liquidator.call{value: address(this).balance}("");
-    //     require(
-    //         success,
-    //         "JoeLiquidator: Failed to transfer profited AVAX to liquidator"
-    //     );
-    // }
-
     function _swapRemainingSeizedTokenToAVAX(
         address _initiator,
         address _jSeizeTokenAddress
-    ) internal {
+    ) internal returns (uint256) {
         JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
         address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
 
@@ -368,6 +373,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         require(
             remainingSeizeAmount > 0,
             "JoeLiquidator: Expected to have remaining seize amount in order to have profited from liquidation"
+        );
+
+        console.log(
+            "[JoeLiquidator] We have %d remaining seize tokens to swap to AVAX...",
+            remainingSeizeAmount
         );
 
         seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
@@ -390,6 +400,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             amounts[0],
             amounts[1]
         );
+
+        // Return profitted AVAX
+        return amounts[1];
     }
 
     function _swapSeizeTokenToFlashLoanToken(
