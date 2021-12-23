@@ -214,7 +214,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
 
         // Perform liquidation using underlying repay token and receive seize token in return.
-        _performLiquidation(
+        _liquidateBorrow(
             jRepayToken,
             liquidationData.borrowerToLiquidate,
             liquidationData.repayAmount,
@@ -351,7 +351,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      * @param _repayAmount The amount of the underlying borrowed asset to repay
      * @param _jSeizeToken The market in which to seize collateral from the borrower
      */
-    function _performLiquidation(
+    function _liquidateBorrow(
         JErc20Interface _jRepayToken,
         address _borrowerToLiquidate,
         uint256 _repayAmount,
