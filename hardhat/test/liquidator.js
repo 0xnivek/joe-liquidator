@@ -146,18 +146,23 @@ describe("JoeLiquidator", function () {
       console.log("OWNER jLINK.e BALANCE AFTER", jLINKEBalanceAfter);
       expect(jLINKEBalanceAfter.gt(0)).to.equal(true);
 
-      return;
+      // Get jLINKE collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
+      const jLINKECollateralFactor = 0.6;
 
-      /// 2. Enter market via Joetroller for jAVAX for AVAX as collateral
+      // 0.6 LINK.E ~= 12.221 USDT.e
+
+      /// 2. Enter market via Joetroller for jLINK.e for using LINK.e as collateral
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JAVAX_ADDRESS)
+          .checkMembership(owner.address, JLINKE_ADDRESS)
       ).to.equal(false);
-      await joetrollerContract.connect(owner).enterMarkets([JAVAX_ADDRESS])
+      await joetrollerContract.connect(owner).enterMarkets([JLINKE_ADDRESS])
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JAVAX_ADDRESS)
+          .checkMembership(owner.address, JLINKE_ADDRESS)
       ).to.equal(true);
+
+      return;
 
       /// 3. Get account liquidity in protocol before borrow
       const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
