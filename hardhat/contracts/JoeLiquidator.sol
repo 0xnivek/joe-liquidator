@@ -243,9 +243,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         uint256 _flashLoanAmount,
         bytes calldata _data
     ) internal pure returns (LiquidationData memory) {
-        // Use block scoping and structs to avoid stack too deep errors.
-        // See https://soliditydeveloper.com/stacktoodeep to learn more.
-        LiquidationData memory liquidationData;
         (
             address initiator,
             address borrowerToLiquidate,
@@ -259,6 +256,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
                 (address, address, address, address, uint256, uint256, address)
             );
 
+        // Validate encoded data
         require(
             _initiator == initiator,
             "JoeLiquidator: Untrusted loan initiator"
@@ -272,11 +270,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             "JoeLiquidator: Encoded data (flashLoanAmount) does not match"
         );
 
-        liquidationData.borrowerToLiquidate = borrowerToLiquidate;
-        liquidationData.jRepayTokenAddress = jRepayTokenAddress;
-        liquidationData.repayAmount = repayAmount;
-        liquidationData.jSeizeTokenAddress = jSeizeTokenAddress;
-
+        LiquidationData memory liquidationData = LiquidationData({
+            borrowerToLiquidate: borrowerToLiquidate,
+            jRepayTokenAddress: jRepayTokenAddress,
+            jSeizeTokenAddress: jSeizeTokenAddress,
+            repayAmount: repayAmount
+        });
         return liquidationData;
     }
 
