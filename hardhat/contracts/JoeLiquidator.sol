@@ -224,7 +224,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         // Redeem jSeizeTokens for underlying seize tokens
         _redeemSeizeToken(liquidationData.jSeizeTokenAddress);
 
-        // Swap seize token to flash loan token to repay flashLoanAmountToRepay
+        // Swap seize token to flash loan token so we can repay flash loan
         _swapSeizeTokenToFlashLoanToken(
             liquidationData.jSeizeTokenAddress,
             _flashLoanTokenAddress,
@@ -329,8 +329,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmountToRepay
     ) internal {
-        // Swap seized token to flashLoanedToken (e.g. USDC.e)
-        // TODO: Do we need to calculate the exact seizeAmount here?
+        // Swap seized token to flash loan token
         ERC20 seizeToken = ERC20(_jSeizeTokenUnderlyingAddress);
         uint256 seizeAmount = seizeToken.balanceOf(address(this));
         seizeToken.approve(joeRouter02Address, seizeAmount);
@@ -344,6 +343,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             swapPath, // path
             address(this), // to
             block.timestamp // deadline
+        );
+
+        // Check we received enough tokens to repay flash loan from the swap
+        ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
+        require(
+            flashLoanToken.balanceOf(address(this)) >= _flashLoanAmountToRepay,
+            "JoeLiquidator: Expected to have enough tokens to repay flash loan after swapping seized tokens."
         );
     }
 
