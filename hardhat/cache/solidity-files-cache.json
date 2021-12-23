@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640224052283,
-      "contentHash": "b8a3e4c3128b1bdae03c110b3d31e539",
+      "lastModificationDate": 1640229982217,
+      "contentHash": "4724cef3652f9cbbd89dd9170d818679",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",

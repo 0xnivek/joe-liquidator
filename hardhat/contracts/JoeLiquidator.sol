@@ -190,23 +190,27 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
         );
 
         // Convert any remaining seized token to native AVAX
-        _swapRemainingSeizedTokenToAVAX(liquidationData.jSeizeTokenAddress);
+        _swapRemainingSeizedTokenToAVAX(
+            _initiator,
+            liquidationData.jSeizeTokenAddress
+        );
 
-        // Transfer profited AVAX to liquidator
-        _transferProfitedAVAXToLiquidator(_initiator);
+        // // Transfer profited AVAX to liquidator
+        // _transferProfitedAVAXToLiquidator(_initiator);
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
 
-    function _transferProfitedAVAXToLiquidator(address _liquidator) internal {
-        (bool success, ) = _liquidator.call{value: address(this).balance}("");
-        require(
-            success,
-            "JoeLiquidator: Failed to transfer profited AVAX to liquidator"
-        );
-    }
+    // function _transferProfitedAVAXToLiquidator(address _liquidator) internal {
+    //     (bool success, ) = _liquidator.call{value: address(this).balance}("");
+    //     require(
+    //         success,
+    //         "JoeLiquidator: Failed to transfer profited AVAX to liquidator"
+    //     );
+    // }
 
     function _swapRemainingSeizedTokenToAVAX(
+        address _initiator,
         address _jSeizeTokenUnderlyingAddress
     ) internal {
         // Swap seized token to AVAX
@@ -227,7 +231,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
             remainingSeizeAmount, // amountIn
             0, // amountOutMin
             swapPath, // path
-            address(this), // to
+            _initiator, // to
             block.timestamp // deadline
         );
     }
