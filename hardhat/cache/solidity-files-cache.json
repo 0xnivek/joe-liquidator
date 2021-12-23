@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640230515289,
-      "contentHash": "8fa15768f7934b4326133798e367e0ed",
+      "lastModificationDate": 1640233259881,
+      "contentHash": "0b7c57f146ec28b3588b7c9eeb68c8da",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -268,8 +268,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JoetrollerInterface.sol": {
-      "lastModificationDate": 1640216355242,
-      "contentHash": "0b36b6dc0e317d74152232b2819f9935",
+      "lastModificationDate": 1640231156483,
+      "contentHash": "3a5862dd86d345b355720fe700b9ebb1",
       "sourceName": "contracts/lending/JoetrollerInterface.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -295,13 +295,15 @@
         }
       },
       "imports": [
-        "./JTokenInterfaces.sol"
+        "./JTokenInterfaces.sol",
+        "./PriceOracle.sol"
       ],
       "versionPragmas": [
         "^0.8.3"
       ],
       "artifacts": [
-        "Joetroller"
+        "Joetroller",
+        "JoetrollerV1Storage"
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/interfaces/WAVAXInterface.sol": {

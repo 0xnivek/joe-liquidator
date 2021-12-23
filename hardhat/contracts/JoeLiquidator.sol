@@ -19,7 +19,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
      */
     address public joetrollerAddress;
     address public joeRouter02Address;
-    address public priceOracleAddress;
     address public jUSDCEAddress;
     address public jWETHEAddress;
 
@@ -42,15 +41,73 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface {
     constructor(
         address _joetrollerAddress,
         address _joeRouter02Address,
-        address _priceOracleAddress,
         address _jUSDCEAddress,
         address _jWETHEAddress
     ) {
         joetrollerAddress = _joetrollerAddress;
         joeRouter02Address = _joeRouter02Address;
-        priceOracleAddress = _priceOracleAddress;
         jUSDCEAddress = _jUSDCEAddress;
         jWETHEAddress = _jWETHEAddress;
+    }
+
+    modifier isLiquidatable(address _borrowerToLiquidate) {
+        (, uint256 liquidity, ) = Joetroller(joetrollerAddress)
+            .getAccountLiquidity(_borrowerToLiquidate);
+        require(
+            liquidity != 0,
+            "JoeLiquidator: Cannot liquidate account with non-zero liquidity"
+        );
+        _;
+    }
+
+    function liquidate(
+        address _borrowerToLiquidate,
+        address _jRepayTokenAddress,
+        address _jSeizeTokenAddress
+    ) internal isLiquidatable(_borrowerToLiquidate) {
+        uint256 amountToRepay = getAmountToRepay(
+            _borrowerToLiquidate,
+            _jRepayTokenAddress,
+            _jSeizeTokenAddress
+        );
+    }
+
+    function getAmountToRepay(
+        address _borrowerToLiquidate,
+        address _jRepayTokenAddress,
+        address _jSeizeTokenAddress
+    ) internal view returns (uint256) {
+        Joetroller joetroller = Joetroller(joetrollerAddress);
+        PriceOracle priceOracle = joetroller.oracle();
+
+        uint256 closeFactor = joetroller.closeFactorMantissa();
+        uint256 liquidationIncentive = joetroller
+            .liquidationIncentiveMantissa();
+
+        uint256 repayTokenUnderlyingPrice = priceOracle.getUnderlyingPrice(
+            JToken(_jRepayTokenAddress)
+        );
+        uint256 seizeTokenUnderlyingPrice = priceOracle.getUnderlyingPrice(
+            JToken(_jSeizeTokenAddress)
+        );
+
+        uint256 maxRepayAmount = (JTokenInterface(_jRepayTokenAddress)
+            .borrowBalanceCurrent(_borrowerToLiquidate) * closeFactor) /
+            uint256(10**18);
+        uint256 maxSeizeAmount = (JTokenInterface(_jSeizeTokenAddress)
+            .balanceOfUnderlying(_borrowerToLiquidate) * liquidationIncentive) /
+            uint256(10**18);
+
+        uint256 maxRepayAmountInUSD = maxRepayAmount *
+            repayTokenUnderlyingPrice;
+        uint256 maxSeizeAmountInUSD = maxSeizeAmount *
+            seizeTokenUnderlyingPrice;
+
+        uint256 maxAmountInUSD = (maxRepayAmountInUSD < maxSeizeAmountInUSD)
+            ? maxRepayAmountInUSD
+            : maxSeizeAmountInUSD;
+
+        return maxAmountInUSD / repayTokenUnderlyingPrice;
     }
 
     /**
