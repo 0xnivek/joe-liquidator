@@ -430,15 +430,25 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 _repayAmount,
         JTokenInterface _jSeizeToken
     ) internal {
+        // Approve repay jToken to take our underlying repay jToken so that we
+        // can perform liquidation
+        ERC20(_jRepayToken.underlying()).approve(
+            address(_jRepayToken),
+            _repayAmount
+        );
+
+        // Now, we can perform liquidation.
         uint256 err = _jRepayToken.liquidateBorrow(
             _borrowerToLiquidate,
             _repayAmount,
             _jSeizeToken
         );
-        console.log(
-            "[JoeLiquidator][ERROR] Received error %d trying to liquidateBorrow...",
-            err
-        );
+        if (err != 0) {
+            console.log(
+                "[JoeLiquidator][ERROR] Received error %d trying to liquidateBorrow...",
+                err
+            );
+        }
         require(
             err == 0,
             "JoeLiquidator: Error occurred trying to liquidateBorrow"
