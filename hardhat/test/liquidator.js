@@ -219,7 +219,7 @@ describe("JoeLiquidator", function () {
       console.log("SHORTFALL AFTER BORROW:", shortfallAfterBorrow);
 
       /// 7. Increase time, mine block, and accrue interest so that we can make account liquidatable!
-      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12]);
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 5]);
       await ethers.provider.send("evm_mine");
 
       const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();

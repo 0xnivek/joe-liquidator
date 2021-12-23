@@ -57,7 +57,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         (, uint256 liquidity, ) = Joetroller(joetrollerAddress)
             .getAccountLiquidity(_borrowerToLiquidate);
         require(
-            liquidity != 0,
+            liquidity == 0,
             "JoeLiquidator: Cannot liquidate account with non-zero liquidity"
         );
         _;
@@ -263,6 +263,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 liquidationData.repayAmount,
             "JoeLiquidator: Expected to have enough underlying repay token to liquidate borrow position."
         );
+        console.log(
+            "[JoeLiquidator] About to liquidateBorrow. Possess %d tokens of address:",
+            ERC20(jRepayToken.underlying()).balanceOf(address(this))
+        );
+        console.logAddress(jRepayToken.underlying());
 
         // Perform liquidation using underlying repay token and receive jSeizeTokens in return.
         _liquidateBorrow(
@@ -429,6 +434,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             _borrowerToLiquidate,
             _repayAmount,
             _jSeizeToken
+        );
+        console.log(
+            "[JoeLiquidator][ERROR] Received error %d trying to liquidateBorrow...",
+            err
         );
         require(
             err == 0,
