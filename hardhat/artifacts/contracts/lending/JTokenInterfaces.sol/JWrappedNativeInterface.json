@@ -25,6 +25,59 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "borrowAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "borrowNative",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract ERC3156FlashBorrowerInterface",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "initiator",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "flashLoan",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "borrower",
           "type": "address"
@@ -49,6 +102,30 @@
         }
       ],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "borrower",
+          "type": "address"
+        },
+        {
+          "internalType": "contract JTokenInterface",
+          "name": "jTokenCollateral",
+          "type": "address"
+        }
+      ],
+      "name": "liquidateBorrowNative",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -106,11 +183,11 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "repayAmount",
+          "name": "redeemTokens",
           "type": "uint256"
         }
       ],
-      "name": "repayBorrow",
+      "name": "redeemNative",
       "outputs": [
         {
           "internalType": "uint256",

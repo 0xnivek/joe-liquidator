@@ -121,8 +121,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/lending/JTokenInterfaces.sol": {
-      "lastModificationDate": 1640283287370,
-      "contentHash": "a2272a1c1764830d85cdce3697f05784",
+      "lastModificationDate": 1640294546502,
+      "contentHash": "d3e89177cfa1c312f34ea720df374cf6",
       "sourceName": "contracts/lending/JTokenInterfaces.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -155,6 +155,7 @@
       ],
       "artifacts": [
         "JCollateralCapErc20Delegator",
+        "JCollateralCapErc20Interface",
         "JErc20Interface",
         "JErc20Storage",
         "JToken",

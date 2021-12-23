@@ -36,33 +36,42 @@ interface JErc20Storage {
 }
 
 interface JErc20Interface is JErc20Storage {
-    function borrow(uint256 borrowAmount) external returns (uint256);
-
-    function redeem(uint256 redeemTokens) external returns (uint256);
-
-    function repayBorrow(uint256 repayAmount) external returns (uint256);
-
     function liquidateBorrow(
         address borrower,
         uint256 repayAmount,
         JTokenInterface jTokenCollateral
     ) external returns (uint256);
 
+    function redeem(uint256 redeemTokens) external returns (uint256);
+
     function mint(uint256 mintAmount) external returns (uint256);
+
+    function borrow(uint256 borrowAmount) external returns (uint256);
 }
 
 interface JWrappedNativeInterface is JErc20Interface {
-    function mintNative() external payable returns (uint256);
-}
+    function flashLoan(
+        ERC3156FlashBorrowerInterface receiver,
+        address initiator,
+        uint256 amount,
+        bytes calldata data
+    ) external returns (bool);
 
-interface JWrappedNativeDelegator is JTokenInterface, JWrappedNativeInterface {
     function liquidateBorrowNative(
         address borrower,
         JTokenInterface jTokenCollateral
     ) external payable returns (uint256);
+
+    function redeemNative(uint256 redeemTokens) external returns (uint256);
+
+    function mintNative() external payable returns (uint256);
+
+    function borrowNative(uint256 borrowAmount) external returns (uint256);
 }
 
-interface JCollateralCapErc20Delegator is JTokenInterface, JErc20Interface {
+interface JWrappedNativeDelegator is JTokenInterface, JWrappedNativeInterface {}
+
+interface JCollateralCapErc20Interface is JErc20Interface {
     function flashLoan(
         ERC3156FlashBorrowerInterface receiver,
         address initiator,
@@ -70,3 +79,8 @@ interface JCollateralCapErc20Delegator is JTokenInterface, JErc20Interface {
         bytes calldata data
     ) external returns (bool);
 }
+
+interface JCollateralCapErc20Delegator is
+    JTokenInterface,
+    JCollateralCapErc20Interface
+{}
