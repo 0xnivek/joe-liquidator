@@ -93,12 +93,14 @@ describe("JoeLiquidator", function () {
 
       const wavaxBalanceBeforeDeposit = await wavaxContract.balanceOf(owner.address);
       console.log("WAVAX BALANCE BEFORE DEPOSIT:", wavaxBalanceBeforeDeposit);
+      expect(wavaxBalanceBeforeDeposit.eq(0)).to.equal(true);
 
       const wavaxDepositTxn = await wavaxContract.connect(owner).deposit({ value: amountOfAVAXToSwap });
       await wavaxDepositTxn.wait();
 
       const wavaxBalanceAfterDeposit = await wavaxContract.balanceOf(owner.address);
       console.log("WAVAX BALANCE AFTER DEPOSIT:", wavaxBalanceAfterDeposit);
+      expect(wavaxBalanceAfterDeposit.eq(amountOfAVAXToSwap)).to.equal(true);
 
       return;
 
