@@ -128,7 +128,7 @@ describe("JoeLiquidator", function () {
 
       const usdteBalanceAfterSwap = await usdteContract.balanceOf(owner.address);
       expect(usdteBalanceAfterSwap.gt(0)).to.equal(true);
-      console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
+      console.log("USDTE BALANCE AFTER SWAP:", usdteBalanceAfterSwap);
 
       /// 1. Supply 1000 USDT.e to jUSDT contract as collateral
       const jUSDTEBalanceUnderlyingBefore = await jUSDTEContract.balanceOfUnderlying(owner.address);
