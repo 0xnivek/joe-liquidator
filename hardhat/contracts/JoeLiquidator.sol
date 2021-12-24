@@ -555,25 +555,37 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         swapPath[0] = _flashLoanedTokenAddress;
         swapPath[1] = _jRepayTokenUnderlyingAddress;
 
-        uint256[] memory amountsOutDebug = _getAmountsOut(
-            _flashLoanAmount,
-            swapPath
-        );
-        console.log(
-            "[JoeLiquidator] Getting amounts out returns (%d, %d) with path:",
-            amountsOutDebug[0],
-            amountsOutDebug[1]
-        );
-        console.logAddress(_flashLoanedTokenAddress);
-        console.logAddress(_jRepayTokenUnderlyingAddress);
+        // uint256[] memory amountsOutDebug = _getAmountsOut(
+        //     _flashLoanAmount,
+        //     swapPath
+        // );
+        // console.log(
+        //     "[JoeLiquidator] Getting amounts out returns (%d, %d) with path:",
+        //     amountsOutDebug[0],
+        //     amountsOutDebug[1]
+        // );
+        // console.logAddress(_flashLoanedTokenAddress);
+        // console.logAddress(_jRepayTokenUnderlyingAddress);
 
-        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
-            _flashLoanAmount, // amountIn
-            _repayAmount, // amountOutMin
-            swapPath, // path
-            address(this), // to
-            block.timestamp // deadline
-        );
+        bool isRepayNative = _jRepayTokenUnderlyingAddress == WAVAX;
+
+        if (isRepayNative) {
+            JoeRouter02(joeRouter02Address).swapExactTokensForAVAX(
+                _flashLoanAmount, // amountIn
+                _repayAmount, // amountOutMin
+                swapPath, // path
+                address(this), // to
+                block.timestamp // deadline
+            );
+        } else {
+            JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+                _flashLoanAmount, // amountIn
+                _repayAmount, // amountOutMin
+                swapPath, // path
+                address(this), // to
+                block.timestamp // deadline
+            );
+        }
     }
 
     function _approveFlashLoanToken(
