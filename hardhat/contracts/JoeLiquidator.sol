@@ -521,10 +521,20 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             _jSeizeTokenAddress
         ).balanceOf(address(this));
 
+        JErc20Interface jSeizeToken = JErc20Interface(_jSeizeTokenAddress);
+
+        bool isSeizeNative = jSeizeToken.underlying() == WAVAX;
+        uint256 err;
+
         // Redeem `amountOfJSeizeTokensToRedeem` jSeizeTokens for underlying seize tokens
-        uint256 err = JErc20Interface(_jSeizeTokenAddress).redeem(
-            amountOfJSeizeTokensToRedeem
-        );
+        if (isSeizeNative) {
+            err = JWrappedNativeInterface(_jSeizeTokenAddress).redeemNative(
+                amountOfJSeizeTokensToRedeem
+            );
+        } else {
+            err = jSeizeToken.redeem(amountOfJSeizeTokensToRedeem);
+        }
+
         require(
             err == 0,
             "JoeLiquidator: Error occurred trying to redeem underlying seize tokens"
