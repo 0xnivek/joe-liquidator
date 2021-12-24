@@ -95,9 +95,9 @@ describe("JoeLiquidator", function () {
     [owner, addr1, addr2] = await ethers.getSigners();
   });
 
-  describe("Test liquidate ERC20 borrow position and ERC20 supply position", function () {
+  describe("Test liquidate native borrow position and ERC20 supply position", function () {
     // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
-    it("Test liquidate USDT borrow position and LINK supply position", async function () {
+    it("Test liquidate native borrow position and USDT supply position", async function () {
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 
