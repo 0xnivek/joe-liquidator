@@ -243,10 +243,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             _data
         );
 
-        // Approve flash loan lender to retrieve loan amount + fee from us
-        ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
         uint256 flashLoanAmountToRepay = _flashLoanAmount.add(_flashLoanFee);
-        flashLoanToken.approve(msg.sender, flashLoanAmountToRepay);
 
         // ********************************************************************
         // Our custom logic begins here...
@@ -313,6 +310,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // ********************************************************************
         // Our custom logic ends here...
         // ********************************************************************
+
+        // Approve flash loan lender to retrieve loan amount + fee from us
+        _approveFlashLoanToken(_flashLoanTokenAddress, flashLoanAmountToRepay);
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
@@ -574,6 +574,22 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             address(this), // to
             block.timestamp // deadline
         );
+    }
+
+    function _approveFlashLoanToken(
+        address _flashLoanTokenAddress,
+        uint256 _flashLoanAmountToRepay
+    ) internal {
+        ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
+
+        // Ensure we have enough to repay flash loan
+        require(
+            flashLoanToken.balanceOf(address(this)) >= _flashLoanAmountToRepay,
+            "JoeLiquidator: Expected to have enough tokens to repay flash loan after swapping seized tokens."
+        );
+
+        // Approve flash loan lender to retrieve loan amount + fee from us
+        flashLoanToken.approve(msg.sender, _flashLoanAmountToRepay);
     }
 
     function _getJTokenToFlashLoan(bool _isRepayTokenUSDCE)

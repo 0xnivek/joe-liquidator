@@ -266,6 +266,7 @@ describe("JoeLiquidator", function () {
       expect(repayAmount.gt(0)).to.equal(true);
       expect(profitedAvax.gt(0)).to.equal(true);
 
+      // Amount repaid was 9334394 and profited 0.004084249707846783 AVAX!
       console.log(
         `Successfully liquidated ${borrowerLiquidated} for jRepayToken ${jRepayTokenAddress} ` +
         `and jSeizeToken ${jSeizeTokenAddress}.`
