@@ -261,19 +261,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             liquidationData.repayAmount
         );
 
-        // Now we should have `liquidationData.repayAmount` of underlying repay tokens
-        // to liquidate the borrow position.
-        require(
-            ERC20(jRepayToken.underlying()).balanceOf(address(this)) ==
-                liquidationData.repayAmount,
-            "JoeLiquidator: Expected to have enough underlying repay token to liquidate borrow position."
-        );
-        console.log(
-            "[JoeLiquidator] About to liquidateBorrow. Possess %d tokens of address:",
-            ERC20(jRepayToken.underlying()).balanceOf(address(this))
-        );
-        console.logAddress(jRepayToken.underlying());
-
         // Perform liquidation using underlying repay token and receive jSeizeTokens in return.
         _liquidateBorrow(
             jRepayToken,
@@ -477,6 +464,22 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 _repayAmount,
         JTokenInterface _jSeizeToken
     ) internal {
+        // Now we should have `liquidationData.repayAmount` of underlying repay tokens
+        // to liquidate the borrow position.
+        bool isRepayNative = _jRepayToken.underlying() == WAVAX;
+        uint256 repayTokenBalance = isRepayNative
+            ? address(this).balance
+            : ERC20(_jRepayToken.underlying()).balanceOf(address(this));
+        require(
+            repayTokenBalance == _repayAmount,
+            "JoeLiquidator: Expected to have enough underlying repay token to liquidate borrow position."
+        );
+        console.log(
+            "[JoeLiquidator] About to liquidateBorrow. Possess %d tokens of address:",
+            repayTokenBalance
+        );
+        console.logAddress(_jRepayToken.underlying());
+
         // Approve repay jToken to take our underlying repay jToken so that we
         // can perform liquidation
         ERC20(_jRepayToken.underlying()).approve(
