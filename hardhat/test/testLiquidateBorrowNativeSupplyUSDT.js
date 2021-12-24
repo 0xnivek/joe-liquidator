@@ -91,6 +91,7 @@ describe("JoeLiquidator", function () {
     jUSDTEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JUSDTE_ADDRESS);
     wavaxContract = await ethers.getContractAt("WAVAXInterface", WAVAX);
     linkeContract = await ethers.getContractAt("ERC20", LINKE);
+    usdteContract = await ethers.getContractAt("ERC20", USDTE);
 
     [owner, addr1, addr2] = await ethers.getSigners();
   });
@@ -107,98 +108,97 @@ describe("JoeLiquidator", function () {
 
       /// 0. Swap AVAX for 1000 USDT.e
       /// Note: 8.336 AVAX ~= 1000 USDT.e
-      const amountOfAVAXToSwap = ethers.utils.parseEther("0.5");
+      /// Note: USDT.e is 6 decimals
+      const amountOfAVAXToSwap = ethers.utils.parseEther("10");
+      const amountOfUSDTEToSupply = ethers.utils.parseUnits("1000", 6);
 
-      const linkeBalanceBeforeSwap = await linkeContract.balanceOf(owner.address);
-      expect(linkeBalanceBeforeSwap.eq(0)).to.equal(true);
-      console.log("LINKE BALANCE BEFORE SWAP:", linkeBalanceBeforeSwap);
+      const usdteBalanceBeforeSwap = await usdteContract.balanceOf(owner.address);
+      expect(usdteBalanceBeforeSwap.eq(0)).to.equal(true);
+      console.log("USDTE BALANCE BEFORE SWAP:", usdteBalanceBeforeSwap);
 
       const currentBlock = await ethers.provider.getBlock();
-      const swapAVAXForLINKE = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
-        ethers.utils.parseEther("1"),
-        [WAVAX, LINKE],
-        owner.address,
-        currentBlock.timestamp + SECONDS_IN_MINUTE,
+      const swapAVAXForUSDTE = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
+        amountOfUSDTEToSupply, // amountOutMin
+        [WAVAX, USDTE], // path
+        owner.address, // to
+        currentBlock.timestamp + SECONDS_IN_MINUTE, // deadline
         { value: amountOfAVAXToSwap }
       );
-      await swapAVAXForLINKE.wait();
+      await swapAVAXForUSDTE.wait();
 
-      const linkeBalanceAfterSwap = await linkeContract.balanceOf(owner.address);
-      expect(linkeBalanceAfterSwap.gt(0)).to.equal(true);
+      const usdteBalanceAfterSwap = await usdteContract.balanceOf(owner.address);
+      expect(usdteBalanceAfterSwap.gt(0)).to.equal(true);
       console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
 
-      /// 1. Supply 1 LINK.e to jLINK contract as collateral
-      const jLINKEBalanceUnderlyingBefore = await jLINKEContract.balanceOfUnderlying(owner.address);
-      console.log("OWNER jLINK.e BALANCE UNDERLYING BEFORE", jLINKEBalanceUnderlyingBefore);
-      expect(jLINKEBalanceUnderlyingBefore).to.equal(0);
+      /// 1. Supply 1000 USDT.e to jUSDT contract as collateral
+      const jUSDTEBalanceUnderlyingBefore = await jUSDTEContract.balanceOfUnderlying(owner.address);
+      console.log("OWNER jUSDT.e BALANCE UNDERLYING BEFORE", jUSDTEBalanceUnderlyingBefore);
+      expect(jUSDTEBalanceUnderlyingBefore).to.equal(0);
 
-      // Note: LINK.e is 18 decimals
-      const amountOfLINKEToSupply = ethers.utils.parseEther("1");
+      // Approve jUSDT.e contract to take USDT.e
+      const approveJUSDTETxn = await usdteContract.connect(owner).approve(JUSDTE_ADDRESS, amountOfUSDTEToSupply)
+      await approveJUSDTETxn.wait();
 
-      // Approve jLINK.e contract to take LINK.e
-      const approveJLINKETxn = await linkeContract.connect(owner).approve(JLINKE_ADDRESS, amountOfLINKEToSupply)
-      await approveJLINKETxn.wait();
+      // Supply USDT.e to jUDST.e contract
+      const mintUSDTETxn = await jUSDTEContract.connect(owner).mint(amountOfUSDTEToSupply);
+      await mintUSDTETxn.wait();
+      console.log("Supplying USDT.e as collateral to jUSDT.e...");
 
-      // Supply LINK.e to jLINK.e contract
-      const mintLINKETxn = await jLINKEContract.connect(owner).mint(amountOfLINKEToSupply);
-      await mintLINKETxn.wait();
-      console.log("Supplying LINK.e as collateral to jLINK.e...");
+      const jUSDTEBalanceUnderlyingAfter = await jUSDTEContract.balanceOfUnderlying(owner.address);
+      console.log("OWNER jUSDT.e BALANCE UNDERLYING AFTER", jUSDTEBalanceUnderlyingAfter);
+      expect(jUSDTEBalanceUnderlyingAfter.gt(0)).to.equal(true);
 
-      const jLINKEBalanceUnderlyingAfter = await jLINKEContract.balanceOfUnderlying(owner.address);
-      console.log("OWNER jLINK.e BALANCE UNDERLYING AFTER", jLINKEBalanceUnderlyingAfter);
-      expect(jLINKEBalanceUnderlyingAfter.gt(0)).to.equal(true);
-
-      // 0.6 LINK.E ~= 12.221 USDT.e
-
-      /// 2. Enter market via Joetroller for jLINK.e for using LINK.e as collateral
+      /// 2. Enter market via Joetroller for jUSDT.e for using USDT.e as collateral
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JLINKE_ADDRESS)
+          .checkMembership(owner.address, JUSDTE_ADDRESS)
       ).to.equal(false);
-      await joetrollerContract.connect(owner).enterMarkets([JLINKE_ADDRESS])
+      await joetrollerContract.connect(owner).enterMarkets([JUSDTE_ADDRESS])
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JLINKE_ADDRESS)
+          .checkMembership(owner.address, JUSDTE_ADDRESS)
       ).to.equal(true);
 
 
       /// 3. Get account liquidity in protocol before borrow
-      const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
+      const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] =
+        await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY BEFORE BORROW:", liquidityBeforeBorrow);
       console.log("SHORTFUL BEFORE BORROW:", shortfallBeforeBorrow);
 
 
-      /// 4. Fetch borrow rate per second for jUSDT.e
-      const jUSDTEBorrowRatePerSecond = await jUSDTEContract.borrowRatePerSecond();
-      expect(jUSDTEBorrowRatePerSecond.gt(0)).to.equal(true);
-      console.log("jUSDT.e BORROW RATE PER SECOND:", jUSDTEBorrowRatePerSecond);
+      // /// 4. Fetch borrow rate per second for jUSDT.e
+      // const jUSDTEBorrowRatePerSecond = await jUSDTEContract.borrowRatePerSecond();
+      // expect(jUSDTEBorrowRatePerSecond.gt(0)).to.equal(true);
+      // console.log("jUSDT.e BORROW RATE PER SECOND:", jUSDTEBorrowRatePerSecond);
 
 
-      // 5. Get jLINKE collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
-      const jLINKECollateralFactor = 0.6;
+      // 5. Get jUSDTE collateral factor. Queried by using Joetroller#markets(address _jTokenAddress) => Market
+      const jUSDTECollateralFactor = 0.8;
 
 
       /// 6. Borrow USDT.e from jUSDT.e contract.
       /// Note: 
-      /// 1. 0.6 LINK.E ~= 12.221 USDT.e so we should borrow 11 USDT.e
-      /// 2. USDT.e has 6 decimals
+      /// 1. 6.633 AVAX ~= 800 USDT.e so we should borrow 11 USDT.e
+      /// 2. AVAX has 18 decimals
+      /// 3. USDT.e has 6 decimals
 
       // Confirm jUSDT.e borrowBalanceCurrent is 0 before we borrow
-      const jUSDTEBorrowBalanceBefore = await jUSDTEContract.borrowBalanceCurrent(owner.address);
-      console.log("jUSDT.e BORROW BALANCE BEFORE:", jUSDTEBorrowBalanceBefore);
-      expect(jUSDTEBorrowBalanceBefore).to.equal(0);
+      const jNativeBorrowBalanceBefore = await jAVAXContract.borrowBalanceCurrent(owner.address);
+      console.log("jAVAX BORROW BALANCE BEFORE:", jNativeBorrowBalanceBefore);
+      expect(jNativeBorrowBalanceBefore).to.equal(0);
 
-      // Borrow 11 USDT.e from jUSDT.e contract
+      // Borrow 5 AVAX from jAVAX contract
       console.log("Borrowing...");
-      const amountOfUSDTEToBorrow = ethers.utils.parseUnits("11", 6);
-      const borrowTxn = await jUSDTEContract.connect(owner).borrow(amountOfUSDTEToBorrow);
+      const amountOfNativeToBorrow = ethers.utils.parseEther("5");
+      const borrowTxn = await jAVAXContract.connect(owner).borrowNative(amountOfNativeToBorrow);
       // Have to call `wait` to get transaction mined.
       await borrowTxn.wait();
 
-      // Confirm jUSDT.e borrowBalanceCurrent after borrow is 11.0 USDT.e
-      const jUSDTEBorrowBalanceAfter = await jUSDTEContract.borrowBalanceCurrent(owner.address);
-      console.log("jUSDT.e BORROW BALANCE AFTER:", jUSDTEBorrowBalanceAfter);
-      expect(jUSDTEBorrowBalanceAfter.eq(amountOfUSDTEToBorrow)).to.equal(true);
+      // Confirm jAVAX borrowBalanceCurrent after borrow is 5 AVAX
+      const jNativeBorrowBalanceAfter = await jAVAXContract.borrowBalanceCurrent(owner.address);
+      console.log("jAVAX BORROW BALANCE AFTER:", jNativeBorrowBalanceAfter);
+      expect(jNativeBorrowBalanceAfter.eq(amountOfNativeToBorrow)).to.equal(true);
 
       const [errAfterBorrow, liquidityAfterBorrow, shortfallAfterBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY AFTER BORROW:", liquidityAfterBorrow);
@@ -208,11 +208,11 @@ describe("JoeLiquidator", function () {
       await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 5]);
       await ethers.provider.send("evm_mine");
 
-      const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();
-      await accrueUSDTEInterestTxn.wait();
+      const accrueNativeInterestTxn = await jAVAXContract.accrueInterest();
+      await accrueNativeInterestTxn.wait();
 
-      const jUSDTEBorrowBalanceAfterMining = await jUSDTEContract.borrowBalanceCurrent(owner.address);
-      console.log("jUSDTE BORROW BALANCE AFTER MINING:", jUSDTEBorrowBalanceAfterMining);
+      const jNativeBorrowBalanceAfterMining = await jAVAXContract.borrowBalanceCurrent(owner.address);
+      console.log("jAVAX BORROW BALANCE AFTER MINING:", jNativeBorrowBalanceAfterMining);
 
       // Confirm account has shortfall, a.k.a. can be liquidated 
       const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(owner.address);
@@ -221,7 +221,13 @@ describe("JoeLiquidator", function () {
 
       /// 8. Liquidate account!
       console.log("Starting liquidation...");
-      const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(owner.address, JUSDTE_ADDRESS, JLINKE_ADDRESS);
+      const jRepayTokenAddress = JAVAX_ADDRESS;
+      const jSeizeTokenAddress = JUSDTE_ADDRESS;
+      const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(
+        owner.address, // borrowerToLiquidate
+        jRepayTokenAddress, // jRepayTokenAddress
+        jSeizeTokenAddress // jSeizeTokenAddress
+      );
       const liquidationTxnReceipt = await liquidateTxn.wait();
       console.log("LIQUIDATION RECEIPT:", liquidationTxnReceipt);
 
@@ -234,22 +240,22 @@ describe("JoeLiquidator", function () {
       expect(liquidationEventLog.name).to.equal('LiquidationEvent');
 
       const [
-        borrowerLiquidated,
-        jRepayTokenAddress,
-        jSeizeTokenAddress,
-        repayAmount,
-        profitedAvax,
+        borrowerLiquidatedFromEvent,
+        jRepayTokenAddressFromEvent,
+        jSeizeTokenAddressFromEvent,
+        repayAmountFromEvent,
+        profitedAvaxFromEvent,
         ...rest
       ] = liquidationEventLog.args;
       console.log(liquidationEventLog.args);
 
-      expect(borrowerLiquidated).to.equal(owner.address);
-      expect(jRepayTokenAddress).to.equal(JUSDTE_ADDRESS);
-      expect(jSeizeTokenAddress).to.equal(JLINKE_ADDRESS);
-      expect(repayAmount.gt(0)).to.equal(true);
-      expect(profitedAvax.gt(0)).to.equal(true);
+      expect(borrowerLiquidatedFromEvent).to.equal(owner.address);
+      expect(jRepayTokenAddressFromEvent).to.equal(jRepayTokenAddress);
+      expect(jSeizeTokenAddressFromEvent).to.equal(jSeizeTokenAddress);
+      expect(repayAmountFromEvent.gt(0)).to.equal(true);
+      expect(profitedAvaxFromEvent.gt(0)).to.equal(true);
 
-      // Amount repaid was 9334394 and profited 0.004084249707846783 AVAX!
+      // Amount repaid was 
       console.log(
         `Successfully liquidated ${borrowerLiquidated} for jRepayToken ${jRepayTokenAddress} ` +
         `and jSeizeToken ${jSeizeTokenAddress}.`
