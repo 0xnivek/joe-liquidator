@@ -50,7 +50,7 @@ const getTxnLogs = (contract, txnReceipt) => {
   return logs;
 }
 
-xdescribe("JoeLiquidator", function () {
+describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
@@ -211,8 +211,8 @@ xdescribe("JoeLiquidator", function () {
       const accrueNativeInterestTxn = await jAVAXContract.accrueInterest();
       await accrueNativeInterestTxn.wait();
 
-      const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();
-      await accrueUSDTEInterestTxn.wait();
+      // const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();
+      // await accrueUSDTEInterestTxn.wait();
 
       const jNativeBorrowBalanceAfterMining = await jAVAXContract.borrowBalanceCurrent(owner.address);
       console.log("jAVAX BORROW BALANCE AFTER MINING:", jNativeBorrowBalanceAfterMining);

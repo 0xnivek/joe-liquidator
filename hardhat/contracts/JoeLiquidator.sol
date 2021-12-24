@@ -610,6 +610,19 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 _repayAmount
             );
 
+            uint256 jSeizeTokenAccrualBlockTimestamp = _jSeizeToken
+                .accrualBlockTimestamp();
+            uint256 currentBlockTimestamp = block.timestamp;
+            console.log(
+                "[JoeLiquidator] jSeizeToken accrualBlockTimestamp of %d and currentBlockTimestamp %d...",
+                jSeizeTokenAccrualBlockTimestamp,
+                currentBlockTimestamp
+            );
+            require(
+                jSeizeTokenAccrualBlockTimestamp == currentBlockTimestamp,
+                "JoeLiquidator: jSeizeToken accrualBlockTimestamp not equal to current block timestamp"
+            );
+
             console.log(
                 "[JoeLiquidator] Calling liquidateBorrowNative with args:"
             );

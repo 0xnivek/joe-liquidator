@@ -5,6 +5,11 @@ import "../interfaces/ERC3156FlashBorrowerInterface.sol";
 
 interface JTokenStorage {
     function totalBorrows() external view returns (uint256);
+
+    /**
+     * @notice Block timestamp that interest was last accrued at
+     */
+    function accrualBlockTimestamp() external view returns (uint256);
 }
 
 interface JTokenInterface is JTokenStorage {
