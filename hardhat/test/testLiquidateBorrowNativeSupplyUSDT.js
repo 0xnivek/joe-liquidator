@@ -50,7 +50,7 @@ const getTxnLogs = (contract, txnReceipt) => {
   return logs;
 }
 
-describe("JoeLiquidator", function () {
+xdescribe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
@@ -205,11 +205,14 @@ describe("JoeLiquidator", function () {
       console.log("SHORTFALL AFTER BORROW:", shortfallAfterBorrow);
 
       /// 7. Increase time, mine block, and accrue interest so that we can make account liquidatable!
-      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 5]);
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 10]);
       await ethers.provider.send("evm_mine");
 
       const accrueNativeInterestTxn = await jAVAXContract.accrueInterest();
       await accrueNativeInterestTxn.wait();
+
+      const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();
+      await accrueUSDTEInterestTxn.wait();
 
       const jNativeBorrowBalanceAfterMining = await jAVAXContract.borrowBalanceCurrent(owner.address);
       console.log("jAVAX BORROW BALANCE AFTER MINING:", jNativeBorrowBalanceAfterMining);
@@ -218,6 +221,8 @@ describe("JoeLiquidator", function () {
       const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY AFTER MINING:", liquidityAfterMining);
       console.log("SHORTFALL AFTER MINING:", shortfallAfterMining);
+      expect(liquidityAfterMining.eq(0)).to.equal(true);
+      expect(shortfallAfterMining.gt(0)).to.equal(true);
 
       /// 8. Liquidate account!
       console.log("Starting liquidation...");

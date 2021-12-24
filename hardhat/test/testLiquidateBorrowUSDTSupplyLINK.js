@@ -50,7 +50,7 @@ const getTxnLogs = (contract, txnReceipt) => {
   return logs;
 }
 
-xdescribe("JoeLiquidator", function () {
+describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
@@ -208,8 +208,14 @@ xdescribe("JoeLiquidator", function () {
       await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 5]);
       await ethers.provider.send("evm_mine");
 
+      // Need to accrue interest for both the borrow and supply jToken, otherwise
+      // we run into this error in JToken#liquidateBorrowFresh:
+      // https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L726-L732
       const accrueUSDTEInterestTxn = await jUSDTEContract.accrueInterest();
       await accrueUSDTEInterestTxn.wait();
+
+      const accrueLINKEInterestTxn = await jLINKEContract.accrueInterest();
+      await accrueLINKEInterestTxn.wait();
 
       const jUSDTEBorrowBalanceAfterMining = await jUSDTEContract.borrowBalanceCurrent(owner.address);
       console.log("jUSDTE BORROW BALANCE AFTER MINING:", jUSDTEBorrowBalanceAfterMining);
