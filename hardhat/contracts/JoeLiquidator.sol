@@ -184,9 +184,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jSeizeTokenAddress,
         uint256 _repayAmount
     ) internal {
-        address underlyingRepayToken = JCollateralCapErc20Delegator(
-            _jRepayTokenAddress
-        ).underlying();
+        address underlyingRepayToken = JErc20Storage(_jRepayTokenAddress)
+            .underlying();
         bool isRepayTokenUSDCE = underlyingRepayToken == USDCE;
 
         uint256 flashLoanAmount = _getFlashLoanAmount(
@@ -195,6 +194,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             isRepayTokenUSDCE
         );
 
+        // We will only ever flash loan from jUSDC or jWETH
         JCollateralCapErc20Delegator jTokenToFlashLoan = _getJTokenToFlashLoan(
             isRepayTokenUSDCE
         );
@@ -252,7 +252,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // Our custom logic begins here...
         // ********************************************************************
 
-        JCollateralCapErc20Delegator jRepayToken = JCollateralCapErc20Delegator(
+        JErc20Interface jRepayToken = JErc20Interface(
             liquidationData.jRepayTokenAddress
         );
 
