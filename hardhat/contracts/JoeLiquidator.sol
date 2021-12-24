@@ -202,11 +202,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         bytes memory data = abi.encode(
             msg.sender, // initiator
             _borrowerToLiquidate, // borrowerToLiquidate
-            jTokenToFlashLoan.underlying(), // flashLoanedTokenAddress
             _jRepayTokenAddress, // jRepayTokenAddress
+            _jSeizeTokenAddress, // jSeizeTokenAddress
+            jTokenToFlashLoan.underlying(), // flashLoanedTokenAddress
             flashLoanAmount, // flashLoanAmount
-            _repayAmount, // repayAmount
-            _jSeizeTokenAddress // jSeizeTokenAddress
+            _repayAmount // repayAmount
         );
 
         jTokenToFlashLoan.flashLoan(this, msg.sender, flashLoanAmount, data);
@@ -326,14 +326,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         (
             address initiator,
             address borrowerToLiquidate,
-            address flashLoanedTokenAddress,
             address jRepayTokenAddress,
+            address jSeizeTokenAddress,
+            address flashLoanedTokenAddress,
             uint256 flashLoanAmount,
-            uint256 repayAmount,
-            address jSeizeTokenAddress
+            uint256 repayAmount
         ) = abi.decode(
                 _data,
-                (address, address, address, address, uint256, uint256, address)
+                (address, address, address, address, address, uint256, uint256)
             );
 
         // Validate encoded data
