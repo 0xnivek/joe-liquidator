@@ -41,4 +41,12 @@ interface Joetroller is JoetrollerV1Storage {
             uint256,
             uint256
         );
+
+    function liquidateBorrowAllowed(
+        address jTokenBorrowed,
+        address jTokenCollateral,
+        address liquidator,
+        address borrower,
+        uint256 repayAmount
+    ) external returns (uint256);
 }

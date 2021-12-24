@@ -62,11 +62,15 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     modifier isLiquidatable(address _borrowerToLiquidate) {
-        (, uint256 liquidity, ) = Joetroller(joetrollerAddress)
+        (, uint256 liquidity, uint256 shortfall) = Joetroller(joetrollerAddress)
             .getAccountLiquidity(_borrowerToLiquidate);
         require(
             liquidity == 0,
             "JoeLiquidator: Cannot liquidate account with non-zero liquidity"
+        );
+        require(
+            shortfall == 0,
+            "JoeLiquidator: Cannot liquidate account with zero shortfall"
         );
         _;
     }
@@ -521,7 +525,65 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         uint256 err;
         if (isRepayNative) {
-            console.log("[JoeLiquidator] Calling liquidateBorrowNative...");
+            // Debug: Confirm we can accrue interest
+            err = JWrappedNativeDelegator(address(_jRepayToken))
+                .accrueInterest();
+            if (err != 0) {
+                console.log(
+                    "[JoeLiquidator] Failed to accrue interest on repay jToken address:"
+                );
+                console.logAddress(address(_jRepayToken));
+            }
+
+            err = _jSeizeToken.accrueInterest();
+            if (err != 0) {
+                console.log(
+                    "[JoeLiquidator] Failed to accrue interest on seize jToken address:"
+                );
+                console.logAddress(address(_jSeizeToken));
+            }
+
+            // Debug: Confirm liquidate borrow is allowed
+            uint256 liquidationAllowed = Joetroller(joetrollerAddress)
+                .liquidateBorrowAllowed(
+                    address(_jRepayToken), // jTokenBorrowed
+                    address(_jSeizeToken), // jTokenCollateral
+                    address(this), // liquidator
+                    _borrowerToLiquidate, // borrower
+                    _repayAmount // repayAmount
+                );
+            if (liquidationAllowed != 0) {
+                console.log(
+                    "[JoeLiquidator] Joetroller liquidateBorrowAllowed: %d",
+                    liquidationAllowed
+                );
+            }
+
+            (uint256 accountLiquidityErr, , uint256 shortfall) = Joetroller(
+                joetrollerAddress
+            ).getAccountLiquidity(_borrowerToLiquidate);
+            console.log(
+                "[JoeLiquidator] Joetroller borrowerToLiquidate shortfall (%d) and err (%d)",
+                shortfall,
+                accountLiquidityErr
+            );
+
+            uint256 maxRepaymentAmount = _getMaxRepaymentAmount(
+                address(_jRepayToken),
+                _borrowerToLiquidate
+            );
+            console.log(
+                "[JoeLiquidator] Max repayment amount of %d and trying to repay %d...",
+                maxRepaymentAmount,
+                _repayAmount
+            );
+
+            console.log(
+                "[JoeLiquidator] Calling liquidateBorrowNative with args:"
+            );
+            console.log("repayAmount: %d", _repayAmount);
+            console.logAddress(_borrowerToLiquidate);
+            console.logAddress(address(_jSeizeToken));
             err = JWrappedNativeInterface(address(_jRepayToken))
                 .liquidateBorrowNative{value: _repayAmount}(
                 _borrowerToLiquidate,
@@ -724,5 +786,21 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             mantissa: jSeizeToken.exchangeRateStored()
         });
         return mul_ScalarTruncate(exchangeRate, jSeizeToken.balanceOf(_owner));
+    }
+
+    function _getMaxRepaymentAmount(
+        address _jRepayTokenAddress,
+        address _borrowerToLiquidate
+    ) internal view returns (uint256) {
+        uint256 closeFactorMantissa = Joetroller(joetrollerAddress)
+            .closeFactorMantissa();
+        uint256 borrowBalance = JToken(_jRepayTokenAddress).borrowBalanceStored(
+            _borrowerToLiquidate
+        );
+        uint256 maxClose = mul_ScalarTruncate(
+            Exp({mantissa: closeFactorMantissa}),
+            borrowBalance
+        );
+        return maxClose;
     }
 }
