@@ -424,24 +424,36 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             amountOfSeizeTokenToSwap
         );
 
-        // Approve router to transfer `amountOfSeizeTokenToSwap` underlying
-        // seize tokens
-        ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
-        seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
+        bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
+        if (isSeizeNative) {
+            JoeRouter02(joeRouter02Address).swapExactAVAXForTokens{
+                value: amountOfSeizeTokenToSwap
+            }(
+                _flashLoanAmountToRepay, // amountOutMin
+                swapPath, // path
+                address(this), // to
+                block.timestamp // deadline
+            );
+        } else {
+            // Approve router to transfer `amountOfSeizeTokenToSwap` underlying
+            // seize tokens
+            ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
+            seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
 
-        console.log(
-            "[JoeLiquidator] Amount of seize tokens we possess (%d)...",
-            seizeToken.balanceOf(address(this))
-        );
+            console.log(
+                "[JoeLiquidator] Amount of seize tokens we possess (%d)...",
+                seizeToken.balanceOf(address(this))
+            );
 
-        // Swap seized token to flash loan token
-        JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
-            amountOfSeizeTokenToSwap, // amountIn
-            _flashLoanAmountToRepay, // amountOutMin
-            swapPath, // path
-            address(this), // to
-            block.timestamp // deadline
-        );
+            // Swap seized token to flash loan token
+            JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+                amountOfSeizeTokenToSwap, // amountIn
+                _flashLoanAmountToRepay, // amountOutMin
+                swapPath, // path
+                address(this), // to
+                block.timestamp // deadline
+            );
+        }
 
         // Check we received enough tokens to repay flash loan from the swap
         ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
