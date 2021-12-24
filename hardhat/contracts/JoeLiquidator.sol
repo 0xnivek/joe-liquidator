@@ -71,6 +71,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         _;
     }
 
+    // Need to implement receive function in order for this contract to receive AVAX.
+    // We need to receive AVAX when we want to repay a native borrow position.
+    receive() external payable {
+        // React to receiving AVAX
+    }
+
     function liquidate(
         address _borrowerToLiquidate,
         address _jRepayTokenAddress,
@@ -600,21 +606,24 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         swapPath[0] = _flashLoanedTokenAddress;
         swapPath[1] = _jRepayTokenUnderlyingAddress;
 
-        // uint256[] memory amountsOutDebug = _getAmountsOut(
-        //     _flashLoanAmount,
-        //     swapPath
-        // );
-        // console.log(
-        //     "[JoeLiquidator] Getting amounts out returns (%d, %d) with path:",
-        //     amountsOutDebug[0],
-        //     amountsOutDebug[1]
-        // );
-        // console.logAddress(_flashLoanedTokenAddress);
-        // console.logAddress(_jRepayTokenUnderlyingAddress);
+        uint256[] memory amountsOutDebug = _getAmountsOut(
+            _flashLoanAmount,
+            swapPath
+        );
+        console.log(
+            "[JoeLiquidator] Getting amounts out returns (%d, %d) with path:",
+            amountsOutDebug[0],
+            amountsOutDebug[1]
+        );
+        console.logAddress(_flashLoanedTokenAddress);
+        console.logAddress(_jRepayTokenUnderlyingAddress);
 
         bool isRepayNative = _jRepayTokenUnderlyingAddress == WAVAX;
 
         if (isRepayNative) {
+            console.log(
+                "[JoeLiquidator] Swapping flash loan token to AVAX repay tokens..."
+            );
             JoeRouter02(joeRouter02Address).swapExactTokensForAVAX(
                 _flashLoanAmount, // amountIn
                 _repayAmount, // amountOutMin
@@ -623,6 +632,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 block.timestamp // deadline
             );
         } else {
+            console.log(
+                "[JoeLiquidator] Swapping flash loan token to ERC20 repay tokens..."
+            );
             JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
                 _flashLoanAmount, // amountIn
                 _repayAmount, // amountOutMin
