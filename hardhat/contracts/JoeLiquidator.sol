@@ -467,6 +467,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // Now we should have `liquidationData.repayAmount` of underlying repay tokens
         // to liquidate the borrow position.
         bool isRepayNative = _jRepayToken.underlying() == WAVAX;
+
         uint256 repayTokenBalance = isRepayNative
             ? address(this).balance
             : ERC20(_jRepayToken.underlying()).balanceOf(address(this));
@@ -480,19 +481,28 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
         console.logAddress(_jRepayToken.underlying());
 
-        // Approve repay jToken to take our underlying repay jToken so that we
-        // can perform liquidation
-        ERC20(_jRepayToken.underlying()).approve(
-            address(_jRepayToken),
-            _repayAmount
-        );
+        uint256 err;
+        if (isRepayNative) {
+            err = JWrappedNativeInterface(_jRepayToken.underlying())
+                .liquidateBorrowNative{value: _repayAmount}(
+                _borrowerToLiquidate,
+                _jSeizeToken
+            );
+        } else {
+            // Approve repay jToken to take our underlying repay jToken so that we
+            // can perform liquidation
+            ERC20(_jRepayToken.underlying()).approve(
+                address(_jRepayToken),
+                _repayAmount
+            );
 
-        // Now, we can perform liquidation.
-        uint256 err = _jRepayToken.liquidateBorrow(
-            _borrowerToLiquidate,
-            _repayAmount,
-            _jSeizeToken
-        );
+            // Now, we can perform liquidation.
+            err = _jRepayToken.liquidateBorrow(
+                _borrowerToLiquidate,
+                _repayAmount,
+                _jSeizeToken
+            );
+        }
         if (err != 0) {
             console.log(
                 "[JoeLiquidator][ERROR] Received error %d trying to liquidateBorrow...",
