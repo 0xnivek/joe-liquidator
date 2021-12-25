@@ -286,11 +286,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // ********************************************************************
         // Our custom logic begins here...
         // ********************************************************************
-        console.log(
-            "[JoeLiquidator] DEBUGGING BORROWER LIQUIDITY before _swapFlashLoanTokenToRepayToken"
-        );
-        _debugLogBorrowerLiquidity(liquidationLocalVars.borrowerToLiquidate);
-
         JErc20Interface jRepayToken = JErc20Interface(
             liquidationLocalVars.jRepayTokenAddress
         );
@@ -302,11 +297,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             jRepayToken.underlying(),
             liquidationLocalVars.repayAmount
         );
-
-        console.log(
-            "[JoeLiquidator] DEBUGGING BORROWER LIQUIDITY before _liquidateBorrow"
-        );
-        _debugLogBorrowerLiquidity(liquidationLocalVars.borrowerToLiquidate);
 
         // Perform liquidation using underlying repay token and receive jSeizeTokens in return.
         _liquidateBorrow(
@@ -546,11 +536,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // Now we should have `liquidationLocalVars.repayAmount` of underlying repay tokens
         // to liquidate the borrow position.
         bool isRepayNative = _jRepayToken.underlying() == WAVAX;
-
-        console.log(
-            "[JoeLiquidator] DEBUGGING BORROWER LIQUIDITY beginning of _liquidateBorrow"
-        );
-        _debugLogBorrowerLiquidity(_borrowerToLiquidate);
 
         console.log(
             "JoeLiquidator: About to _liquidateBorrow. isRepayNative is: %s",
@@ -872,27 +857,5 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             borrowBalance
         );
         return maxClose;
-    }
-
-    function _debugLogBorrowerLiquidity(address _borrowerToLiquidate)
-        internal
-        view
-    {
-        (, uint256 liquidity, uint256 shortfall) = Joetroller(joetrollerAddress)
-            .getAccountLiquidity(_borrowerToLiquidate);
-        console.log(
-            "[JoeLiquidator] Got liquidity (%d) and shortfall (%d) for borrowerToLiquidate with address:",
-            liquidity,
-            shortfall
-        );
-        console.logAddress(_borrowerToLiquidate);
-        require(
-            liquidity == 0,
-            "JoeLiquidator: Cannot liquidate account with non-zero liquidity"
-        );
-        require(
-            shortfall != 0,
-            "JoeLiquidator: Cannot liquidate account with zero shortfall"
-        );
     }
 }
