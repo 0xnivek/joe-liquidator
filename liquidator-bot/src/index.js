@@ -131,6 +131,7 @@ const tryLiquidateAccount = async (account) => {
     `on ${jRepayTokenSymbol} and supply position on ${jSeizeTokenSymbol}`
   );
 
+  // TODO: Uncomment this
   // await JOE_LIQUIDATOR_CONTRACT.liquidate(
   //   borrowerToLiquidateAddress,
   //   jRepayTokenAddress,
