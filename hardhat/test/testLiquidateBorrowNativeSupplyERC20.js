@@ -237,7 +237,6 @@ describe("JoeLiquidator", function () {
         jSeizeTokenAddress // jSeizeTokenAddress
       );
       const liquidationTxnReceipt = await liquidateTxn.wait();
-      console.log("LIQUIDATION RECEIPT:", liquidationTxnReceipt);
 
       const liquidationTxnLogs = getTxnLogs(joeLiquidatorContract, liquidationTxnReceipt);
 
