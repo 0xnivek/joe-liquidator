@@ -97,10 +97,13 @@ describe("JoeLiquidator", function () {
   });
 
   describe("Test liquidate native borrow position and ERC20 supply position", function () {
-    // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
+    // Collateral factor of jAVAX (borrow): 0.75
+    // Collateral factor of jMIM (supply): 0.6
     it("Test liquidate native borrow position and USDT supply position", async function () {
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
+
+      // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
 
       const [errBeginning, liquidityBeginning, shortfallBeginning] = await joetrollerContract.getAccountLiquidity(owner.address);
       console.log("LIQUIDITY BEGINNING:", liquidityBeginning);
