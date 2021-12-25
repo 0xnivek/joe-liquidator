@@ -525,139 +525,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         }
     }
 
-    function _swapRemainingSeizedTokenToAVAX(
-        address _initiator,
-        address _jSeizeTokenAddress
-    ) internal returns (uint256) {
-        JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
-        address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
-
-        bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
-        if (isSeizeNative) {
-            uint256 profitedAVAX = address(this).balance;
-            (bool success, ) = _initiator.call{value: profitedAVAX}("");
-            require(
-                success,
-                "JoeLiquidator: Failed to transfer native AVAX to liquidator"
-            );
-            return profitedAVAX;
-        } else {
-            // Swap seized token to AVAX
-            ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
-            uint256 remainingSeizeAmount = seizeToken.balanceOf(address(this));
-
-            require(
-                remainingSeizeAmount > 0,
-                "JoeLiquidator: Expected to have remaining seize amount in order to have profited from liquidation"
-            );
-
-            console.log(
-                "[JoeLiquidator] We have %d remaining seize tokens to swap to AVAX...",
-                remainingSeizeAmount
-            );
-
-            seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
-
-            address[] memory swapPath = new address[](2);
-            swapPath[0] = jSeizeTokenUnderlyingAddress;
-            swapPath[1] = WAVAX;
-
-            uint256[] memory amounts = JoeRouter02(joeRouter02Address)
-                .swapExactTokensForAVAX(
-                    remainingSeizeAmount, // amountIn
-                    0, // amountOutMin
-                    swapPath, // path
-                    _initiator, // to
-                    block.timestamp // deadline
-                );
-            console.log(
-                "[JoeLiquidator] Successfully transferred all profitted AVAX! (%d, %d)",
-                amounts[0],
-                amounts[1]
-            );
-
-            // Return profitted AVAX
-            return amounts[1];
-        }
-    }
-
-    function _swapSeizeTokenToFlashLoanToken(
-        address _jSeizeTokenAddress,
-        address _flashLoanTokenAddress,
-        uint256 _flashLoanAmountToRepay
-    ) internal {
-        console.log(
-            "[JoeLiquidator] Swapping seize tokens to flash tokens to repay flash loan total (%d)...",
-            _flashLoanAmountToRepay
-        );
-        JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
-        address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
-
-        // Calculate amount of underlying seize token we need
-        // to swap in order to pay back the flash loan amount + fee
-        address[] memory swapPath = new address[](2);
-        swapPath[0] = jSeizeTokenUnderlyingAddress;
-        swapPath[1] = _flashLoanTokenAddress;
-
-        console.log(
-            "[JoeLiquidator] Calculating amount of seize token to swap with path:"
-        );
-        console.logAddress(jSeizeTokenUnderlyingAddress);
-        console.logAddress(_flashLoanTokenAddress);
-
-        uint256 amountOfSeizeTokenToSwap = JoeRouter02(joeRouter02Address)
-            .getAmountsIn(_flashLoanAmountToRepay, swapPath)[0];
-
-        console.log(
-            "[JoeLiquidator] Amount of seize tokens to swap to flash token (%d)...",
-            amountOfSeizeTokenToSwap
-        );
-
-        bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
-        if (isSeizeNative) {
-            JoeRouter02(joeRouter02Address).swapExactAVAXForTokens{
-                value: amountOfSeizeTokenToSwap
-            }(
-                _flashLoanAmountToRepay, // amountOutMin
-                swapPath, // path
-                address(this), // to
-                block.timestamp // deadline
-            );
-        } else {
-            // Approve router to transfer `amountOfSeizeTokenToSwap` underlying
-            // seize tokens
-            ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
-            seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
-
-            console.log(
-                "[JoeLiquidator] Amount of seize tokens we possess (%d)...",
-                seizeToken.balanceOf(address(this))
-            );
-
-            // Swap seized token to flash loan token
-            JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
-                amountOfSeizeTokenToSwap, // amountIn
-                _flashLoanAmountToRepay, // amountOutMin
-                swapPath, // path
-                address(this), // to
-                block.timestamp // deadline
-            );
-        }
-
-        // Check we received enough tokens to repay flash loan from the swap
-        ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
-        require(
-            flashLoanToken.balanceOf(address(this)) >= _flashLoanAmountToRepay,
-            "JoeLiquidator: Expected to have enough tokens to repay flash loan after swapping seized tokens."
-        );
-    }
-
     /**
-     * @notice The sender liquidates the borrowers collateral.
-     * The collateral seized is transferred to the liquidator.
-     * @param _borrowerToLiquidate The borrower of this jToken to be liquidated
-     * @param _repayAmount The amount of the underlying borrowed asset to repay
-     * @param _jSeizeToken The market in which to seize collateral from the borrower
+     * @notice Performs liquidation on a given borrow and supply position
+     * @param _jRepayToken The jToken to repay for liquidation
+     * @param _borrowerToLiquidate The borrower to liquidate
+     * @param _repayAmount The amount of _jRepayToken's underlying assset to repay
+     * @param _jSeizeToken The jToken to seize collateral from
      */
     function _liquidateBorrow(
         JErc20Interface _jRepayToken,
@@ -798,6 +671,133 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         require(
             err == 0,
             "JoeLiquidator: Error occurred trying to liquidateBorrow"
+        );
+    }
+
+    function _swapRemainingSeizedTokenToAVAX(
+        address _initiator,
+        address _jSeizeTokenAddress
+    ) internal returns (uint256) {
+        JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
+        address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
+
+        bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
+        if (isSeizeNative) {
+            uint256 profitedAVAX = address(this).balance;
+            (bool success, ) = _initiator.call{value: profitedAVAX}("");
+            require(
+                success,
+                "JoeLiquidator: Failed to transfer native AVAX to liquidator"
+            );
+            return profitedAVAX;
+        } else {
+            // Swap seized token to AVAX
+            ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
+            uint256 remainingSeizeAmount = seizeToken.balanceOf(address(this));
+
+            require(
+                remainingSeizeAmount > 0,
+                "JoeLiquidator: Expected to have remaining seize amount in order to have profited from liquidation"
+            );
+
+            console.log(
+                "[JoeLiquidator] We have %d remaining seize tokens to swap to AVAX...",
+                remainingSeizeAmount
+            );
+
+            seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
+
+            address[] memory swapPath = new address[](2);
+            swapPath[0] = jSeizeTokenUnderlyingAddress;
+            swapPath[1] = WAVAX;
+
+            uint256[] memory amounts = JoeRouter02(joeRouter02Address)
+                .swapExactTokensForAVAX(
+                    remainingSeizeAmount, // amountIn
+                    0, // amountOutMin
+                    swapPath, // path
+                    _initiator, // to
+                    block.timestamp // deadline
+                );
+            console.log(
+                "[JoeLiquidator] Successfully transferred all profitted AVAX! (%d, %d)",
+                amounts[0],
+                amounts[1]
+            );
+
+            // Return profitted AVAX
+            return amounts[1];
+        }
+    }
+
+    function _swapSeizeTokenToFlashLoanToken(
+        address _jSeizeTokenAddress,
+        address _flashLoanTokenAddress,
+        uint256 _flashLoanAmountToRepay
+    ) internal {
+        console.log(
+            "[JoeLiquidator] Swapping seize tokens to flash tokens to repay flash loan total (%d)...",
+            _flashLoanAmountToRepay
+        );
+        JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
+        address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
+
+        // Calculate amount of underlying seize token we need
+        // to swap in order to pay back the flash loan amount + fee
+        address[] memory swapPath = new address[](2);
+        swapPath[0] = jSeizeTokenUnderlyingAddress;
+        swapPath[1] = _flashLoanTokenAddress;
+
+        console.log(
+            "[JoeLiquidator] Calculating amount of seize token to swap with path:"
+        );
+        console.logAddress(jSeizeTokenUnderlyingAddress);
+        console.logAddress(_flashLoanTokenAddress);
+
+        uint256 amountOfSeizeTokenToSwap = JoeRouter02(joeRouter02Address)
+            .getAmountsIn(_flashLoanAmountToRepay, swapPath)[0];
+
+        console.log(
+            "[JoeLiquidator] Amount of seize tokens to swap to flash token (%d)...",
+            amountOfSeizeTokenToSwap
+        );
+
+        bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
+        if (isSeizeNative) {
+            JoeRouter02(joeRouter02Address).swapExactAVAXForTokens{
+                value: amountOfSeizeTokenToSwap
+            }(
+                _flashLoanAmountToRepay, // amountOutMin
+                swapPath, // path
+                address(this), // to
+                block.timestamp // deadline
+            );
+        } else {
+            // Approve router to transfer `amountOfSeizeTokenToSwap` underlying
+            // seize tokens
+            ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
+            seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
+
+            console.log(
+                "[JoeLiquidator] Amount of seize tokens we possess (%d)...",
+                seizeToken.balanceOf(address(this))
+            );
+
+            // Swap seized token to flash loan token
+            JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
+                amountOfSeizeTokenToSwap, // amountIn
+                _flashLoanAmountToRepay, // amountOutMin
+                swapPath, // path
+                address(this), // to
+                block.timestamp // deadline
+            );
+        }
+
+        // Check we received enough tokens to repay flash loan from the swap
+        ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
+        require(
+            flashLoanToken.balanceOf(address(this)) >= _flashLoanAmountToRepay,
+            "JoeLiquidator: Expected to have enough tokens to repay flash loan after swapping seized tokens."
         );
     }
 
