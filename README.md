@@ -24,7 +24,7 @@ contract JoeLiquidator {
 }
 ```
 
-To learn more, see [Liquidation Process](#liquidation-process).
+To learn more, see [Liquidation](#liquidation).
 
 ### `liquidator-bot`
 
@@ -39,5 +39,5 @@ The only setup required is to make a copy of `liquidator-bot/env.template` and r
 In this file, insert the private key of the wallet address you would like to use to perform
 liquidation for the `WALLET_PRIVATE_KEY` environnment variable.
 
-## [Liquidation](#liquidation-process)
+## Liquidation
 
