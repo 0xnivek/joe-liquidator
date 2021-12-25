@@ -28,7 +28,14 @@ To learn more, see [Liquidation Process](#liquidation-process).
 
 ### `liquidator-bot`
 
-This directory contains a [node.js](https://nodejs.org/en/) project which is what searches for
-liquidatable accounts and calls our `JoeLiquidator` contract.
+This directory contains a [node.js](https://nodejs.org/en/) project which is what continously
+searches for liquidatable accounts and calls our `JoeLiquidator` contract periodically.
 
-## Getting Started
+## Setup
+
+The only setup required is to make a copy of `liquidator-bot/env.template` and rename it to
+`liquidator-bot/.env`.
+
+In this file, insert the private key of the wallet address you would like to use to perform
+liquidation for the `WALLET_PRIVATE_KEY` environnment variable.
+
