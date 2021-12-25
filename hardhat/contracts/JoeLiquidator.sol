@@ -385,6 +385,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             liquidationLocalVars.jSeizeTokenAddress
         );
 
+        // ********************************************************************
+        // Our custom logic ends here...
+        // ********************************************************************
+
+        // Approve flash loan lender to retrieve loan amount + fee from us
+        _approveFlashLoanToken(_flashLoanTokenAddress, flashLoanAmountToRepay);
+
         emit LiquidationEvent(
             liquidationLocalVars.borrowerToLiquidate,
             liquidationLocalVars.jRepayTokenAddress,
@@ -392,13 +399,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             liquidationLocalVars.repayAmount,
             profitedAVAX
         );
-
-        // ********************************************************************
-        // Our custom logic ends here...
-        // ********************************************************************
-
-        // Approve flash loan lender to retrieve loan amount + fee from us
-        _approveFlashLoanToken(_flashLoanTokenAddress, flashLoanAmountToRepay);
 
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
