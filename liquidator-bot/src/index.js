@@ -149,7 +149,7 @@ const run = async () => {
         await tryLiquidateAccount(account);
       }
 
-      console.log(`✨ Finished searching through accounts. Will search again in ${INTERVAL_IN_MS / 1000} seconds..\n`);
+      console.log(`✨ Finished searching through accounts...\n`);
     })
     .catch((err) => {
       console.log('Error performing liquidation: ', err);
