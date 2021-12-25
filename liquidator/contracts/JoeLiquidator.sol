@@ -14,10 +14,13 @@ import "./lending/PriceOracle.sol";
 import "./lending/Exponential.sol";
 import "./libraries/SafeMath.sol";
 
+/**
+ * @notice Contract that performs liquidation of underwater accounts in the jToken markets
+ */
 contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     using SafeMath for uint256;
 
-    /// @notice Addresses of joe-lending contracts
+    /// @notice Addresses of Banker Joe contracts
     address public joetrollerAddress;
     address public joeRouter02Address;
     address public jUSDCAddress;
@@ -56,7 +59,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         jWETHAddress = _jWETHAddress;
     }
 
-    /// @notice Need to implement receive function in order for this contract to receive AVAX.
+    /// @dev Need to implement receive function in order for this contract to receive AVAX.
     /// We need to receive AVAX when we liquidating a native borrow position.
     receive() external payable {}
 
@@ -81,7 +84,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @dev Liquidates a borrower with a given jToken to repay and
+     * @notice Liquidates a borrower with a given jToken to repay and
      * jToken to seize.
      * @param _borrowerToLiquidate: Address of the borrower to liquidate
      * @param _jRepayTokenAddress: Address of the jToken to repay
@@ -153,7 +156,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @dev Gets an account's balanceOfUnderlying for a given jToken
+     * @dev Gets an account's balanceOfUnderlying (i.e. supply balance) for a given jToken
      * @param _jTokenAddress The address of a jToken contract
      * @param _account The address the account to lookup
      * @return the account's balanceOfUnderlying in jToken
@@ -170,11 +173,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @dev Performs flash loan of:
-     * - WETH if _jRepayTokenAddress == jUSDC
-     * - USDC otherwise
+     * @notice Performs flash loan from:
+     * - jWETH if _jRepayTokenAddress == jUSDC
+     * - jUSDC otherwise
      * Upon receiving the flash loan, the tokens are swapped to the tokens needed
-     * to repay the borrow position (i.e. jRepayToken.underlying()).
+     * to repay the borrow position and perform liquidation.
      * @param _borrowerToLiquidate The address of the borrower to liquidate
      * @param _jRepayTokenAddress The address of the jToken contract to borrow from
      * @param _jSeizeTokenAddress The address of the jToken contract to seize collateral from
@@ -186,17 +189,20 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jSeizeTokenAddress,
         uint256 _repayAmount
     ) internal {
+        // See if the underlying repay token is USDC
         address underlyingRepayToken = JErc20Storage(_jRepayTokenAddress)
             .underlying();
         bool isRepayTokenUSDC = underlyingRepayToken == USDC;
 
+        // Calculate the amount we need to flash loan
         uint256 flashLoanAmount = _getFlashLoanAmount(
             underlyingRepayToken,
             _repayAmount,
             isRepayTokenUSDC
         );
 
-        // We will only ever flash loan from jUSDC or jWETH
+        // Calculate which jToken to flash loan from.
+        // We will only ever flash loan from jUSDC or jWETH.
         JCollateralCapErc20Delegator jTokenToFlashLoan = _getJTokenToFlashLoan(
             isRepayTokenUSDC
         );
@@ -211,6 +217,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             _repayAmount // repayAmount
         );
 
+        // Perform flash loan
         jTokenToFlashLoan.flashLoan(this, msg.sender, flashLoanAmount, data);
     }
 
@@ -228,6 +235,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         bool _isRepayTokenUSDC
     ) internal view returns (uint256) {
         address[] memory path = new address[](2);
+
+        // If the underlying repay token is USDC, we will flash loan from jWETH,
+        // else we will flash loan jUSDC.
         if (_isRepayTokenUSDC) {
             path[0] = WETH;
         } else {
@@ -239,8 +249,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @dev Gets the jToken to flash loan. We always flash loan from jUSDC unless
-     * the repay token is USDC in which case we flash loan from jWETH.
+     * @dev Gets the jToken to flash loan.
+     * We always flash loan from jUSDC unless the repay token is USDC in which case we
+     * flash loan from jWETH.
      * @param _isRepayTokenUSDC Whether the token of the borrow position to repay is USDC
      * @return The jToken to flash loan
      */
@@ -257,7 +268,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @dev Called by `ERC3156FlashLenderInterface` upon request of a flash loan
+     * @dev Called by a jToken upon request of a flash loan
      * @param _initiator The address that initiated this flash loan
      * @param _flashLoanTokenAddress The address of the flash loan jToken's underlying asset
      * @param _flashLoanAmount The flash loan amount granted
@@ -293,7 +304,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             liquidationLocalVars.jRepayTokenAddress
         );
 
-        // Swap token that we flash loaned (e.g. USDC.e) to the underlying repay token
+        // Swap token that we flash loaned to the token we need to repay the borrow
+        // position
         _swapFlashLoanTokenToRepayToken(
             _flashLoanTokenAddress,
             _flashLoanAmount,
@@ -301,7 +313,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             liquidationLocalVars.repayAmount
         );
 
-        // Perform liquidation using underlying repay token and receive jSeizeTokens in return.
+        // Perform liquidation using the underlying repay token we swapped for and
+        // receive jSeizeTokens in return.
         _liquidateBorrow(
             jRepayToken,
             liquidationLocalVars.borrowerToLiquidate,
@@ -312,18 +325,24 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // Redeem jSeizeTokens for underlying seize tokens
         _redeemSeizeToken(liquidationLocalVars.jSeizeTokenAddress);
 
-        // Swap seize token to flash loan token so we can repay flash loan
+        // Swap enough seize tokens to flash loan tokens so we can repay flash loan
+        // amount + flash loan fee
         _swapSeizeTokenToFlashLoanToken(
             liquidationLocalVars.jSeizeTokenAddress,
             _flashLoanTokenAddress,
             flashLoanAmountToRepay
         );
 
-        // Convert any remaining seized token to native AVAX and send
-        // to liquidator
+        // Convert any remaining seized token to native AVAX, unless it already is
+        // AVAX, and send to liquidator
         uint256 profitedAVAX = _swapRemainingSeizedTokenToAVAX(
             _initiator,
             liquidationLocalVars.jSeizeTokenAddress
+        );
+
+        require(
+            profitedAVAX > 0,
+            "JoeLiquidator: Expected to have profited from liquidation"
         );
 
         // ********************************************************************
@@ -333,6 +352,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // Approve flash loan lender to retrieve loan amount + fee from us
         _approveFlashLoanToken(_flashLoanTokenAddress, flashLoanAmountToRepay);
 
+        // Emit event to indicate successful liquidation
         emit LiquidationEvent(
             liquidationLocalVars.borrowerToLiquidate,
             liquidationLocalVars.jRepayTokenAddress,
@@ -409,7 +429,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jRepayTokenUnderlyingAddress,
         uint256 _repayAmount
     ) internal {
-        // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
         // Approve JoeRouter to transfer our flash loaned token so that we can swap for
         // the underlying repay token
         ERC20(_flashLoanedTokenAddress).approve(
@@ -423,6 +442,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         bool isRepayNative = _jRepayTokenUnderlyingAddress == WAVAX;
 
+        // Swap flashLoanedToken to jRepayTokenUnderlying
         if (isRepayNative) {
             JoeRouter02(joeRouter02Address).swapExactTokensForAVAX(
                 _flashLoanAmount, // amountIn
@@ -443,7 +463,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @notice Performs liquidation on a given borrow and supply position
+     * @dev Performs liquidation given:
+     * - a borrower
+     * - a borrow position to repay
+     * - a supply position to seize
      * @param _jRepayToken The jToken to repay for liquidation
      * @param _borrowerToLiquidate The borrower to liquidate
      * @param _repayAmount The amount of _jRepayToken's underlying assset to repay
@@ -455,10 +478,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 _repayAmount,
         JTokenInterface _jSeizeToken
     ) internal {
-        // Now we should have `liquidationLocalVars.repayAmount` of underlying repay tokens
-        // to liquidate the borrow position.
         bool isRepayNative = _jRepayToken.underlying() == WAVAX;
 
+        // We should have at least `_repayAmount` of underlying repay tokens from
+        // swapping the flash loan tokens.
         uint256 repayTokenBalance = isRepayNative
             ? address(this).balance
             : ERC20(_jRepayToken.underlying()).balanceOf(address(this));
@@ -469,20 +492,21 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         uint256 err;
         if (isRepayNative) {
+            // Perform liquidation and receive jAVAX in return
             err = JWrappedNativeInterface(address(_jRepayToken))
                 .liquidateBorrowNative{value: _repayAmount}(
                 _borrowerToLiquidate,
                 _jSeizeToken
             );
         } else {
-            // Approve repay jToken to take our underlying repay jToken so that we
+            // Approve repay jToken to take our underlying repay tokens so that we
             // can perform liquidation
             ERC20(_jRepayToken.underlying()).approve(
                 address(_jRepayToken),
                 _repayAmount
             );
 
-            // Now, we can perform liquidation.
+            // Perform liquidation and receive jSeizeTokens in return
             err = _jRepayToken.liquidateBorrow(
                 _borrowerToLiquidate,
                 _repayAmount,
@@ -496,7 +520,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @notice Seizes collateral from a jToken market after successfully performing
+     * @dev Seizes collateral from a jToken market after having successfully performed
      * liquidation
      * @param _jSeizeTokenAddress The address of the jToken to seize collateral from
      */
@@ -509,9 +533,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         JErc20Interface jSeizeToken = JErc20Interface(_jSeizeTokenAddress);
 
         bool isSeizeNative = jSeizeToken.underlying() == WAVAX;
-        uint256 err;
 
         // Redeem `amountOfJSeizeTokensToRedeem` jSeizeTokens for underlying seize tokens
+        uint256 err;
         if (isSeizeNative) {
             err = JWrappedNativeInterface(_jSeizeTokenAddress).redeemNative(
                 amountOfJSeizeTokensToRedeem
@@ -527,11 +551,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @notice Swaps enough of the seized collateral to flash loan tokens in order
-     * to repay the flash loan
+     * @dev Swaps enough of the seized collateral to flash loan tokens in order
+     * to repay the flash loan amount + flash loan fee
      * @param _jSeizeTokenAddress The address of the jToken to seize collateral from
      * @param _flashLoanTokenAddress The address of the flash loan jToken's underlying asset
-     * @param _flashLoanAmountToRepay The flash loan amount to repay
+     * @param _flashLoanAmountToRepay The flash loan amount + flash loan fee to repay
      */
     function _swapSeizeTokenToFlashLoanToken(
         address _jSeizeTokenAddress,
@@ -551,6 +575,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             .getAmountsIn(_flashLoanAmountToRepay, swapPath)[0];
 
         bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
+
+        // Perform the swap to flash loan tokens!
         if (isSeizeNative) {
             JoeRouter02(joeRouter02Address).swapExactAVAXForTokens{
                 value: amountOfSeizeTokenToSwap
@@ -576,7 +602,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             );
         }
 
-        // Check we received enough tokens to repay flash loan from the swap
+        // Check we received enough flash loan tokens from the swap to repay the flash loan
         ERC20 flashLoanToken = ERC20(_flashLoanTokenAddress);
         require(
             flashLoanToken.balanceOf(address(this)) >= _flashLoanAmountToRepay,
@@ -585,7 +611,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @notice Swaps all remaining of the seized collateral to AVAX, unless
+     * @dev Swaps all remaining of the seized collateral to AVAX, unless
      * the seized collateral is already AVAX, and sends it to the initiator.
      * @param _initiator The initiator of the flash loan, aka the liquidator
      * @param _jSeizeTokenAddress The address of jToken collateral was seized from
@@ -600,12 +626,15 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
         if (isSeizeNative) {
+            // The seized collateral was AVAX so we can do a simple transfer to the liquidator
             uint256 profitedAVAX = address(this).balance;
+
             (bool success, ) = _initiator.call{value: profitedAVAX}("");
             require(
                 success,
                 "JoeLiquidator: Failed to transfer native AVAX to liquidator"
             );
+
             return profitedAVAX;
         } else {
             // Swap seized token to AVAX
