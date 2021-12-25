@@ -31,7 +31,7 @@ const JUSDT_ADDRESS = "0x8b650e26404AC6837539ca96812f0123601E4448";
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const LINK = "0x5947BB275c521040051D82396192181b413227A3";
 
-xdescribe("JoeLiquidator", function () {
+describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
