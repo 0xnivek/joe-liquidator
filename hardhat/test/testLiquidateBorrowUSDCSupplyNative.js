@@ -179,7 +179,7 @@ describe("JoeLiquidator", function () {
 
       /// 7. Increase time, mine block, and accrue interest so that we can make account liquidatable!
       // 80
-      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 80]);
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 10]);
       await ethers.provider.send("evm_mine");
 
       // Need to accrue interest for both the borrow and supply jToken, otherwise
@@ -237,7 +237,7 @@ describe("JoeLiquidator", function () {
       expect(repayAmountFromEvent.gt(0)).to.equal(true);
       expect(profitedAvaxFromEvent.gt(0)).to.equal(true);
 
-      // Amount repaid was 17593918154301303822 and profited 0.995044465139119386 AVAX!
+      // Amount repaid was 864790133 and profited 0.42079229250805344 AVAX!
       console.log(
         `Successfully liquidated ${borrowerLiquidatedFromEvent} for jRepayToken ${jRepayTokenAddressFromEvent} ` +
         `and jSeizeToken ${jSeizeTokenAddressFromEvent}.`

@@ -543,6 +543,16 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
         console.logAddress(_jRepayToken.underlying());
 
+        uint256 maxRepaymentAmount = _getMaxRepaymentAmount(
+            address(_jRepayToken),
+            _borrowerToLiquidate
+        );
+        console.log(
+            "[JoeLiquidator] Max repayment amount of %d and trying to repay %d...",
+            maxRepaymentAmount,
+            _repayAmount
+        );
+
         uint256 err;
         if (isRepayNative) {
             // // Debug: Confirm we can accrue interest
@@ -598,16 +608,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             console.log(
                 "[JoeLiquidator] Joetroller isRepayAllowed: (%d)...",
                 repayBorrowAllowed
-            );
-
-            uint256 maxRepaymentAmount = _getMaxRepaymentAmount(
-                address(_jRepayToken),
-                _borrowerToLiquidate
-            );
-            console.log(
-                "[JoeLiquidator] Max repayment amount of %d and trying to repay %d...",
-                maxRepaymentAmount,
-                _repayAmount
             );
 
             uint256 jSeizeTokenAccrualBlockTimestamp = _jSeizeToken
@@ -703,14 +703,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             "[JoeLiquidator] Swapping flash loan token (posses %d) for repay token (need %d)...",
             _flashLoanAmount,
             _repayAmount
-        );
-        console.log(
-            "[JoeLiquidator] Recalculating flash loan amount needed (%d)...",
-            _getFlashLoanAmount(
-                _jRepayTokenUnderlyingAddress,
-                _repayAmount,
-                false
-            )
         );
 
         // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
@@ -837,6 +829,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jRepayTokenAddress,
         address _borrowerToLiquidate
     ) internal view returns (uint256) {
+        // From https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/Joetroller.sol#L563-L568
         uint256 closeFactorMantissa = Joetroller(joetrollerAddress)
             .closeFactorMantissa();
         uint256 borrowBalance = JToken(_jRepayTokenAddress).borrowBalanceStored(
