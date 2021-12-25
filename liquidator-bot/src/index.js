@@ -129,8 +129,6 @@ const getJoeLiquidatorContract = () => {
   return new ethers.Contract(JOE_LIQUIDATOR_CONTRACT_ADDRESS, JOE_LIQUIDATOR_ABI, wallet);
 }
 
-const JOE_LIQUIDATOR_CONTRACT = getJoeLiquidatorContract();
-
 /**
  * Tries to liquidate an account by searching for a borrow position to repay and
  * supply position to seize.
@@ -156,7 +154,8 @@ const tryLiquidateAccount = async (account) => {
     `on ${jRepayTokenSymbol} and supply position on ${jSeizeTokenSymbol}`
   );
 
-  await JOE_LIQUIDATOR_CONTRACT.liquidate(
+  const joeLiquidatorContract = getJoeLiquidatorContract();
+  await joeLiquidatorContract.liquidate(
     borrowerToLiquidateAddress,
     jRepayTokenAddress,
     jSeizeTokenAddress
@@ -187,6 +186,16 @@ const run = async () => {
 
 console.log("🔧 Bot starting up...");
 console.log(`🔁 Bot will query the subgraph every ${INTERVAL_IN_MS / 1000} seconds to search for liquidatable accounts...\n`);
+
+if (!JOE_LIQUIDATOR_CONTRACT_ADDRESS) {
+  console.log("🚨 Stopping because the `JOE_LIQUIDATOR_CONTRACT_ADDRESS` environment variable isn't set.")
+  return;
+}
+
+if (!WALLET_PRIVATE_KEY) {
+  console.log("🚨 Stopping because the `WALLET_PRIVATE_KEY` environment variable isn't set.")
+  return;
+}
 
 /// Query the subgraph and attempt to perform liquidation every INTERVAL_IN_MS
 setInterval(run, INTERVAL_IN_MS);
