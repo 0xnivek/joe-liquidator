@@ -36,8 +36,11 @@ searches for liquidatable accounts and calls our `JoeLiquidator` contract period
 The only setup required is to make a copy of `liquidator-bot/env.template` and rename it to
 `liquidator-bot/.env`.
 
-In this file, insert the private key of the wallet address you would like to use to perform
-liquidation for the `WALLET_PRIVATE_KEY` environnment variable.
+In this file, insert 
+
+- `JOE_LIQUIDATOR_CONTRACT_ADDRESS`: the address of the deployed `JoeLiquidator.sol` contract on mainnet
+- `WALLET_PRIVATE_KEY`: the private key of the wallet address you would like to use to perform
+liquidation
 
 ## Installation
 
@@ -141,3 +144,18 @@ is as follows:
 that we're repaying. The reason is that the jToken contracts have a reetrancy guard which means that
 you cannot `flashLoan` and `liquidateBorrow` the same token. Thus, we have to flash loan a different token,
 swap the flash loan token for the repay token, and then call `liquidateBorrow`.
+
+## Bot
+
+The bot works in a very simple fashion. Every `INTERVAL_IN_MS` (currently set to `30000`) it will:
+
+1. Query Banker Joe lending [subgraph](https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts) for underwater accounts
+2. Choose an underwater account
+3. Iterate through `tokens` and find borrow position to repay
+4. Iterate through `tokens` and find supply position to seize where:
+   - `supplyBalanceUnderlying > 0`
+   - `enterMarket === true`
+   - Must have enough `supplyBalanceUnderlying` to seize 50% of borrow value
+5. Call `JoeLiquidator#liquidate`
+
+**NOTE:** `JoeLiquidator.sol` needs to be deployed to mainnet for the bot to work properly.

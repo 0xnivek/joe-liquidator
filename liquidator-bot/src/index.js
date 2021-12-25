@@ -5,10 +5,9 @@ const { createClient, gql } = require('@urql/core');
 const JOE_LIQUIDATOR_ABI = require('./abis/JoeLiquidator');
 const WETH_ABI = require('./abis/WETH');
 
-const { WALLET_PRIVATE_KEY } = process.env;
+const { JOE_LIQUIDATOR_CONTRACT_ADDRESS, WALLET_PRIVATE_KEY } = process.env;
 
-const INTERVAL_IN_MS = 10000;
-const JOE_LIQUIDATOR_CONTRACT_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
+const INTERVAL_IN_MS = 30000;
 const WETH_CONTRACT_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 // From https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts
