@@ -11,7 +11,7 @@ This repository is broken up into two main directories, `liquidator` and `liquid
 
 ### `liquidator`
 
-This directory contains all of our smart contracts. The main one is `liquidator/contracts/JoeLiquidator.sol`
+This directory contains all relevant smart contracts. The main one is `liquidator/contracts/JoeLiquidator.sol`
 which contains an external `liquidate` function:
 
 ```solidity
@@ -38,6 +38,41 @@ The only setup required is to make a copy of `liquidator-bot/env.template` and r
 
 In this file, insert the private key of the wallet address you would like to use to perform
 liquidation for the `WALLET_PRIVATE_KEY` environnment variable.
+
+## Installation
+
+```
+git clone https://github.com/kevinchan159/joe-liquidator.git
+cd joe-liquidator/liquidator
+yarn install
+cd ../liquidator-bot
+yarn install
+```
+
+## Building
+
+To compile the smart contracts:
+
+```
+cd liquidator
+yarn compile
+```
+
+To run the bot:
+
+```
+cd liquidator-bot
+yarn start
+```
+
+## Testing
+
+The smart contract tests are defined under the [liquidator/test](https://github.com/kevinchan159/joe-liquidator/tree/main/liquidator/test) directory. To run them:
+
+```
+cd liquidator
+yarn test
+```
 
 ## Liquidation
 
