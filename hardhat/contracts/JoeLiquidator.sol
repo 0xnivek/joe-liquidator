@@ -560,16 +560,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
         console.logAddress(_jRepayToken.underlying());
 
-        uint256 maxRepaymentAmount = _getMaxRepaymentAmount(
-            address(_jRepayToken),
-            _borrowerToLiquidate
-        );
-        console.log(
-            "[JoeLiquidator] Max repayment amount of %d and trying to repay %d...",
-            maxRepaymentAmount,
-            _repayAmount
-        );
-
         uint256 err;
         if (isRepayNative) {
             // // Debug: Confirm we can accrue interest
@@ -840,22 +830,5 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             mantissa: jSeizeToken.exchangeRateStored()
         });
         return mul_ScalarTruncate(exchangeRate, jSeizeToken.balanceOf(_owner));
-    }
-
-    function _getMaxRepaymentAmount(
-        address _jRepayTokenAddress,
-        address _borrowerToLiquidate
-    ) internal view returns (uint256) {
-        // From https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/Joetroller.sol#L563-L568
-        uint256 closeFactorMantissa = Joetroller(joetrollerAddress)
-            .closeFactorMantissa();
-        uint256 borrowBalance = JToken(_jRepayTokenAddress).borrowBalanceStored(
-            _borrowerToLiquidate
-        );
-        uint256 maxClose = mul_ScalarTruncate(
-            Exp({mantissa: closeFactorMantissa}),
-            borrowBalance
-        );
-        return maxClose;
     }
 }
