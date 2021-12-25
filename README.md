@@ -1,4 +1,4 @@
-# Joe Liquidator 🌊
+# 🌊 Joe Liquidator 🌊
 
 This repository is a liquidation bot built for [**Trader Joe**](https://traderjoexyz.com/#/home), a 
 DEX and lending service built on the [**Avalanche**](https://www.avax.network/) network.
@@ -73,6 +73,22 @@ The smart contract tests are defined under the [liquidator/test](https://github.
 cd liquidator
 yarn test
 ```
+
+Tests are run on the forked Avalanche mainnet. There are three tests:
+
+- `testLiquidateBorrowERC20SupplyERC20.js`: Liquidates a borrow position of `jUSDT` and supply position of `jLINK`
+- `testLiquidateBorrowERC20SupplyNative.js`: Liquidates a borrow position of `jUSDC` and supply position of `jAVAX`
+- `testLiquidateBorrowNativeSupplyERC20.js`: Liquidates a borrow position of `jAVAX` and supply position of `jLINK`
+
+The underwater accounts are generated in each test by:
+
+1. Using a test account to take out a loan position
+2. Increase timestamp by a long amount of time
+3. Mine block
+4. Accrue interest
+
+Doing this for cases in which the borrow rate is greater than the supply rate will lead to accounts that incur shortfall and
+are thus liquidatable!
 
 ## Background
 
