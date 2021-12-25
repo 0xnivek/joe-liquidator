@@ -17,14 +17,13 @@ import "./libraries/SafeMath.sol";
 contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     using SafeMath for uint256;
 
-    /**
-     * @notice Joetroller address
-     */
+    /// @notice Addresses of joe-lending contracts
     address public joetrollerAddress;
     address public joeRouter02Address;
     address public jUSDCAddress;
     address public jWETHAddress;
 
+    /// @notice Addresses of ERC20 contracts
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
     address public constant WETH = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
     address public constant USDC = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
@@ -36,6 +35,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 repayAmount;
     }
 
+    /// @notice Emitted upon successful liquidation
     event LiquidationEvent(
         address indexed _borrowerLiquidated,
         address _jRepayToken,
@@ -56,6 +56,16 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         jWETHAddress = _jWETHAddress;
     }
 
+    /// @notice Need to implement receive function in order for this contract to receive AVAX.
+    /// We need to receive AVAX when we liquidating a native borrow position.
+    receive() external payable {}
+
+    // =================== MODIFIERS ===================
+
+    /// @notice Ensure that we can liquidate the borrower
+    /// @dev A borrower is liquidatable if:
+    ///      1. Their `liquidity` is zero
+    ///      2. Their `shortfall` is non-zero
     modifier isLiquidatable(address _borrowerToLiquidate) {
         (, uint256 liquidity, uint256 shortfall) = Joetroller(joetrollerAddress)
             .getAccountLiquidity(_borrowerToLiquidate);
@@ -74,12 +84,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             "JoeLiquidator: Cannot liquidate account with zero shortfall"
         );
         _;
-    }
-
-    // Need to implement receive function in order for this contract to receive AVAX.
-    // We need to receive AVAX when we want to repay a native borrow position.
-    receive() external payable {
-        // React to receiving AVAX
     }
 
     function liquidate(
