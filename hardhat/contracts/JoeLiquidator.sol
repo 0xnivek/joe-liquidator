@@ -618,10 +618,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 jSeizeTokenAccrualBlockTimestamp,
                 currentBlockTimestamp
             );
-            require(
-                jSeizeTokenAccrualBlockTimestamp == currentBlockTimestamp,
-                "JoeLiquidator: jSeizeToken accrualBlockTimestamp not equal to current block timestamp"
-            );
+            // require(
+            //     jSeizeTokenAccrualBlockTimestamp == currentBlockTimestamp,
+            //     "JoeLiquidator: jSeizeToken accrualBlockTimestamp not equal to current block timestamp"
+            // );
 
             console.log(
                 "[JoeLiquidator] Calling liquidateBorrowNative with args:"
