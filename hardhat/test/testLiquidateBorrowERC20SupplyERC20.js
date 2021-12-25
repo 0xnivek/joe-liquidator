@@ -10,11 +10,14 @@ const {
 } = require("ethereum-waffle");
 const { isCallTrace } = require("hardhat/internal/hardhat-network/stack-traces/message-trace");
 
-const { SECONDS_IN_MINUTE, SECONDS_IN_HOUR, SECONDS_IN_DAY, getTxnLogs } = require("./utils/helpers");
-
-// Based on https://github.com/Sanghren/avalanche-hardhat-fork-tutorial
-const AVALANCHE_NODE_URL = "https://api.avax.network/ext/bc/C/rpc";
-
+const {
+  AVALANCHE_NODE_URL,
+  BLOCK_NUMBER,
+  SECONDS_IN_MINUTE,
+  SECONDS_IN_HOUR,
+  SECONDS_IN_DAY,
+  getTxnLogs
+} = require("./utils/helpers");
 
 use(solidity);
 
@@ -49,6 +52,7 @@ describe("JoeLiquidator", function () {
         {
           forking: {
             jsonRpcUrl: AVALANCHE_NODE_URL,
+            blockNumber: BLOCK_NUMBER
           },
         },
       ],
@@ -75,6 +79,9 @@ describe("JoeLiquidator", function () {
     // Collateral factor of jUSDT (borrow): 0.8
     // Collateral factor of jLINK (supply): 0.6
     it("Test liquidate USDT borrow position and LINK supply position", async function () {
+      const currBlock = await ethers.provider.getBlock();
+      console.log("CURRENT BLOCK NUMBER:", currBlock.number);
+
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 

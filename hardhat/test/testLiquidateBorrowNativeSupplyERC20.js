@@ -10,9 +10,14 @@ const {
 } = require("ethereum-waffle");
 const { isCallTrace } = require("hardhat/internal/hardhat-network/stack-traces/message-trace");
 
-// Based on https://github.com/Sanghren/avalanche-hardhat-fork-tutorial
-const AVALANCHE_NODE_URL = "https://api.avax.network/ext/bc/C/rpc";
-
+const {
+  AVALANCHE_NODE_URL,
+  BLOCK_NUMBER,
+  SECONDS_IN_MINUTE,
+  SECONDS_IN_HOUR,
+  SECONDS_IN_DAY,
+  getTxnLogs
+} = require("./utils/helpers");
 
 use(solidity);
 
@@ -33,23 +38,7 @@ const DAIE = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
 const LINK = "0x5947BB275c521040051D82396192181b413227A3";
 const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
 
-const SECONDS_IN_MINUTE = 60;
-const SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
-const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
-
-const getTxnLogs = (contract, txnReceipt) => {
-  const logs = [];
-  for (const log of txnReceipt.logs) {
-    try {
-      logs.push(contract.interface.parseLog(log));
-    } catch (err) {
-      // Means that log isn't an event emitted from our contract
-    }
-  }
-  return logs;
-}
-
-xdescribe("JoeLiquidator", function () {
+describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
@@ -69,6 +58,7 @@ xdescribe("JoeLiquidator", function () {
         {
           forking: {
             jsonRpcUrl: AVALANCHE_NODE_URL,
+            blockNumber: BLOCK_NUMBER
           },
         },
       ],
@@ -97,6 +87,9 @@ xdescribe("JoeLiquidator", function () {
     // Collateral factor of jLINK (supply): 0.6
     // Queried by using Joetroller#markets(address _jTokenAddress) => Market
     it("Test liquidate native borrow position and LINK supply position", async function () {
+      const currBlock = await ethers.provider.getBlock();
+      console.log("CURRENT BLOCK NUMBER:", currBlock.number);
+
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 
