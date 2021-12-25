@@ -40,7 +40,7 @@ describe("JoeLiquidator", function () {
   let linkContract;
 
   let borrower;
-  let addr1;
+  let liquidator;
   let addr2;
 
   beforeEach(async () => {
@@ -70,12 +70,10 @@ describe("JoeLiquidator", function () {
     jUSDTContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JUSDT_ADDRESS);
     linkContract = await ethers.getContractAt("ERC20", LINK);
 
-    [borrower, addr1, addr2] = await ethers.getSigners();
+    [borrower, liquidator, addr2] = await ethers.getSigners();
   });
 
   describe("Test liquidate ERC20 borrow position and ERC20 supply position", function () {
-    // Borrow rate of jUSDT: 4479306196
-    // Supply rate of jLINK: 23427275
     it("Test liquidate USDT borrow position and LINK supply position", async function () {
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
@@ -159,10 +157,10 @@ describe("JoeLiquidator", function () {
 
       /// 5. Borrow USDT.e from jUSDT.e contract.
       /// Note: 
+      /// - We supplied 1 LINK
       /// - jLINK has collateral factor of 0.6
       /// - 0.6 LINK.E ~= 12.221 USDT.e so we should borrow 11 USDT.e
       /// - USDT.e has 6 decimals
-      const amountOfUSDTEToBorrow = ethers.utils.parseUnits("11", 6);
 
       // Confirm our borrowBalanceCurrent in jUSDT is 0 before we borrow
       const jUSDTBorrowBalanceBefore = await jUSDTContract.borrowBalanceCurrent(borrower.address);
@@ -170,14 +168,15 @@ describe("JoeLiquidator", function () {
 
       // Borrow 11 USDT from jUSDT contract
       console.log("Borrowing USDT from jUSDT...");
-      const borrowTxn = await jUSDTContract.connect(borrower).borrow(amountOfUSDTEToBorrow);
+      const amountOfUSDTToBorrow = ethers.utils.parseUnits("11", 6);
+      const borrowTxn = await jUSDTContract.connect(borrower).borrow(amountOfUSDTToBorrow);
       await borrowTxn.wait();
 
-      // Confirm our borrowBalanceCurrent in jUSDT is `amountOfUSDTEToBorrow` after we borrow
+      // Confirm our borrowBalanceCurrent in jUSDT is `amountOfUSDTToBorrow` after we borrow
       const jUSDTBorrowBalanceAfter = await jUSDTContract.borrowBalanceCurrent(borrower.address);
-      expect(jUSDTBorrowBalanceAfter.eq(amountOfUSDTEToBorrow)).to.equal(true);
+      expect(jUSDTBorrowBalanceAfter.eq(amountOfUSDTToBorrow)).to.equal(true);
 
-      /// Confirm account liquidity is greater than 0 and shortfall is 0 right after the borrow
+      // Confirm account liquidity is greater than 0 and shortfall is 0 right after the borrow
       const [errAfterBorrow, liquidityAfterBorrow, shortfallAfterBorrow] = await joetrollerContract.getAccountLiquidity(borrower.address);
       expect(liquidityAfterBorrow.gt(0)).to.equal(true);
       expect(shortfallAfterBorrow.eq(0)).to.equal(true);
@@ -205,8 +204,8 @@ describe("JoeLiquidator", function () {
       // Accrue interest. Note that we need to accrue interest for both the borrow and 
       // supply jToken, otherwise we run into this error in JToken#liquidateBorrowFresh:
       // https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L726-L732
-      const accrueUSDTEInterestTxn = await jUSDTContract.accrueInterest();
-      await accrueUSDTEInterestTxn.wait();
+      const accrueUSDTInterestTxn = await jUSDTContract.accrueInterest();
+      await accrueUSDTInterestTxn.wait();
 
       const accrueLINKInterestTxn = await jLINKContract.accrueInterest();
       await accrueLINKInterestTxn.wait();
@@ -220,7 +219,7 @@ describe("JoeLiquidator", function () {
 
       /// 9. Liquidate account!
       console.log("Performing liquidation...");
-      const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(borrower.address, JUSDT_ADDRESS, JLINK_ADDRESS);
+      const liquidateTxn = await joeLiquidatorContract.connect(liquidator).liquidate(borrower.address, JUSDT_ADDRESS, JLINK_ADDRESS);
       const liquidationTxnReceipt = await liquidateTxn.wait();
 
       const liquidationTxnLogs = getTxnLogs(joeLiquidatorContract, liquidationTxnReceipt);
