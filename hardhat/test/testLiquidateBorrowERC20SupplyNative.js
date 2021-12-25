@@ -30,7 +30,7 @@ const JUSDC_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const USDC = "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664";
 
-describe("JoeLiquidator", function () {
+xdescribe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
