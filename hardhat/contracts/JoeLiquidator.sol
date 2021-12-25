@@ -851,6 +851,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         }
     }
 
+    /**
+     * @notice Approves the flash loan jToken to retrieve the flash loan amount + fee.
+     * @param _flashLoanTokenAddress The address of the flash loan jToken's underlying asset
+     * @param _flashLoanAmountToRepay The flash loan amount to repay
+     */
     function _approveFlashLoanToken(
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmountToRepay
