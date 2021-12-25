@@ -39,7 +39,7 @@ describe("JoeLiquidator", function () {
   let jUSDTContract;
   let linkContract;
 
-  let owner;
+  let borrower;
   let addr1;
   let addr2;
 
@@ -70,7 +70,7 @@ describe("JoeLiquidator", function () {
     jUSDTContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JUSDT_ADDRESS);
     linkContract = await ethers.getContractAt("ERC20", LINK);
 
-    [owner, addr1, addr2] = await ethers.getSigners();
+    [borrower, addr1, addr2] = await ethers.getSigners();
   });
 
   describe("Test liquidate ERC20 borrow position and ERC20 supply position", function () {
@@ -84,7 +84,7 @@ describe("JoeLiquidator", function () {
 
       // Ensure liquidity and shortfall is 0 before we do anything
       const [errBeginning, liquidityBeginning, shortfallBeginning] =
-        await joetrollerContract.getAccountLiquidity(owner.address);
+        await joetrollerContract.getAccountLiquidity(borrower.address);
       expect(liquidityBeginning.eq(0)).to.equal(true);
       expect(shortfallBeginning.eq(0)).to.equal(true);
 
@@ -100,59 +100,59 @@ describe("JoeLiquidator", function () {
       const amountOfLINKToSupply = ethers.utils.parseEther("1");
 
       // Ensure that our LINK balance is 0 before the swap
-      const linkeBalanceBeforeSwap = await linkContract.balanceOf(owner.address);
+      const linkeBalanceBeforeSwap = await linkContract.balanceOf(borrower.address);
       expect(linkeBalanceBeforeSwap.eq(0)).to.equal(true);
 
       // Perform the swap
       const currentBlock = await ethers.provider.getBlock();
-      const swapAVAXForLINK = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
+      const swapAVAXForLINK = await joeRouterContract.connect(borrower).swapExactAVAXForTokens(
         ethers.utils.parseEther("1"),
         [WAVAX, LINK],
-        owner.address,
+        borrower.address,
         currentBlock.timestamp + SECONDS_IN_MINUTE,
         { value: amountOfAVAXToSwap }
       );
       await swapAVAXForLINK.wait();
 
       // Ensure that our LINK balance after the swap is at least 1 LINK
-      const linkeBalanceAfterSwap = await linkContract.balanceOf(owner.address);
+      const linkeBalanceAfterSwap = await linkContract.balanceOf(borrower.address);
       expect(linkeBalanceAfterSwap.gte(amountOfLINKToSupply)).to.equal(true);
 
 
       /// 2. Supply 1 LINK.e to jLINK contract as collateral
 
       // Ensure our jLINK balance before supplying collateral is 0
-      const jLINKBalanceUnderlyingBefore = await jLINKContract.balanceOfUnderlying(owner.address);
+      const jLINKBalanceUnderlyingBefore = await jLINKContract.balanceOfUnderlying(borrower.address);
       expect(jLINKBalanceUnderlyingBefore).to.equal(0);
 
       // Approve jLINK.e contract to take LINK.e
-      const approveJLINKTxn = await linkContract.connect(owner).approve(JLINK_ADDRESS, amountOfLINKToSupply)
+      const approveJLINKTxn = await linkContract.connect(borrower).approve(JLINK_ADDRESS, amountOfLINKToSupply)
       await approveJLINKTxn.wait();
 
       // Supply LINK.e to jLINK.e contract
       console.log("Supplying LINK as collateral to jLINK...");
-      const mintLINKTxn = await jLINKContract.connect(owner).mint(amountOfLINKToSupply);
+      const mintLINKTxn = await jLINKContract.connect(borrower).mint(amountOfLINKToSupply);
       await mintLINKTxn.wait();
 
       // Ensure our jLINK balance after supplying collateral is greater than 0
-      const jLINKBalanceUnderlyingAfter = await jLINKContract.balanceOfUnderlying(owner.address);
+      const jLINKBalanceUnderlyingAfter = await jLINKContract.balanceOfUnderlying(borrower.address);
       expect(jLINKBalanceUnderlyingAfter.gt(0)).to.equal(true);
 
 
       /// 3. Enter market via Joetroller for jLINK to use LINK as collateral
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JLINK_ADDRESS)
+          .checkMembership(borrower.address, JLINK_ADDRESS)
       ).to.equal(false);
-      await joetrollerContract.connect(owner).enterMarkets([JLINK_ADDRESS])
+      await joetrollerContract.connect(borrower).enterMarkets([JLINK_ADDRESS])
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JLINK_ADDRESS)
+          .checkMembership(borrower.address, JLINK_ADDRESS)
       ).to.equal(true);
 
 
       /// 4. Ensure account liquidity is greater than 0 and shortfall is 0 before borrow
-      const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
+      const [errBeforeBorrow, liquidityBeforeBorrow, shortfallBeforeBorrow] = await joetrollerContract.getAccountLiquidity(borrower.address);
       expect(liquidityBeforeBorrow.gt(0)).to.equal(true);
       expect(shortfallBeforeBorrow.eq(0)).to.equal(true);
 
@@ -165,20 +165,20 @@ describe("JoeLiquidator", function () {
       const amountOfUSDTEToBorrow = ethers.utils.parseUnits("11", 6);
 
       // Confirm our borrowBalanceCurrent in jUSDT is 0 before we borrow
-      const jUSDTBorrowBalanceBefore = await jUSDTContract.borrowBalanceCurrent(owner.address);
+      const jUSDTBorrowBalanceBefore = await jUSDTContract.borrowBalanceCurrent(borrower.address);
       expect(jUSDTBorrowBalanceBefore).to.equal(0);
 
       // Borrow 11 USDT from jUSDT contract
       console.log("Borrowing USDT from jUSDT...");
-      const borrowTxn = await jUSDTContract.connect(owner).borrow(amountOfUSDTEToBorrow);
+      const borrowTxn = await jUSDTContract.connect(borrower).borrow(amountOfUSDTEToBorrow);
       await borrowTxn.wait();
 
       // Confirm our borrowBalanceCurrent in jUSDT is `amountOfUSDTEToBorrow` after we borrow
-      const jUSDTBorrowBalanceAfter = await jUSDTContract.borrowBalanceCurrent(owner.address);
+      const jUSDTBorrowBalanceAfter = await jUSDTContract.borrowBalanceCurrent(borrower.address);
       expect(jUSDTBorrowBalanceAfter.eq(amountOfUSDTEToBorrow)).to.equal(true);
 
       /// Confirm account liquidity is greater than 0 and shortfall is 0 right after the borrow
-      const [errAfterBorrow, liquidityAfterBorrow, shortfallAfterBorrow] = await joetrollerContract.getAccountLiquidity(owner.address);
+      const [errAfterBorrow, liquidityAfterBorrow, shortfallAfterBorrow] = await joetrollerContract.getAccountLiquidity(borrower.address);
       expect(liquidityAfterBorrow.gt(0)).to.equal(true);
       expect(shortfallAfterBorrow.eq(0)).to.equal(true);
 
@@ -213,14 +213,14 @@ describe("JoeLiquidator", function () {
 
       // Confirm account liquidity is 0 and has non-zero shortfall after mining, 
       // i.e. can be liquidated 
-      const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(owner.address);
+      const [errAfterMining, liquidityAfterMining, shortfallAfterMining] = await joetrollerContract.getAccountLiquidity(borrower.address);
       expect(liquidityAfterMining.eq(0)).to.equal(true);
       expect(shortfallAfterMining.gt(0)).to.equal(true);
 
 
       /// 9. Liquidate account!
       console.log("Performing liquidation...");
-      const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(owner.address, JUSDT_ADDRESS, JLINK_ADDRESS);
+      const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(borrower.address, JUSDT_ADDRESS, JLINK_ADDRESS);
       const liquidationTxnReceipt = await liquidateTxn.wait();
 
       const liquidationTxnLogs = getTxnLogs(joeLiquidatorContract, liquidationTxnReceipt);
@@ -240,7 +240,7 @@ describe("JoeLiquidator", function () {
         ...rest
       ] = liquidationEventLog.args;
 
-      expect(borrowerLiquidated).to.equal(owner.address);
+      expect(borrowerLiquidated).to.equal(borrower.address);
       expect(jRepayTokenAddress).to.equal(JUSDT_ADDRESS);
       expect(jSeizeTokenAddress).to.equal(JLINK_ADDRESS);
       expect(repayAmount.gt(0)).to.equal(true);
