@@ -674,6 +674,42 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
     }
 
+    /**
+     * @notice Seizes collateral from a jToken market after successfully performing
+     * liquidation
+     * @param _jSeizeTokenAddress The address of the jToken to seize collateral from
+     */
+    function _redeemSeizeToken(address _jSeizeTokenAddress) internal {
+        // Get amount of jSeizeToken's we have
+        uint256 amountOfJSeizeTokensToRedeem = JTokenInterface(
+            _jSeizeTokenAddress
+        ).balanceOf(address(this));
+
+        JErc20Interface jSeizeToken = JErc20Interface(_jSeizeTokenAddress);
+
+        bool isSeizeNative = jSeizeToken.underlying() == WAVAX;
+        uint256 err;
+
+        // Redeem `amountOfJSeizeTokensToRedeem` jSeizeTokens for underlying seize tokens
+        if (isSeizeNative) {
+            err = JWrappedNativeInterface(_jSeizeTokenAddress).redeemNative(
+                amountOfJSeizeTokensToRedeem
+            );
+        } else {
+            err = jSeizeToken.redeem(amountOfJSeizeTokensToRedeem);
+        }
+
+        require(
+            err == 0,
+            "JoeLiquidator: Error occurred trying to redeem underlying seize tokens"
+        );
+        console.log(
+            "[JoeLiquidator] Successfully redeemed %d jSeizeTokens with address:",
+            amountOfJSeizeTokensToRedeem
+        );
+        console.logAddress(_jSeizeTokenAddress);
+    }
+
     function _swapRemainingSeizedTokenToAVAX(
         address _initiator,
         address _jSeizeTokenAddress
@@ -799,37 +835,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             flashLoanToken.balanceOf(address(this)) >= _flashLoanAmountToRepay,
             "JoeLiquidator: Expected to have enough tokens to repay flash loan after swapping seized tokens."
         );
-    }
-
-    function _redeemSeizeToken(address _jSeizeTokenAddress) internal {
-        // Get amount of jSeizeToken's we have
-        uint256 amountOfJSeizeTokensToRedeem = JTokenInterface(
-            _jSeizeTokenAddress
-        ).balanceOf(address(this));
-
-        JErc20Interface jSeizeToken = JErc20Interface(_jSeizeTokenAddress);
-
-        bool isSeizeNative = jSeizeToken.underlying() == WAVAX;
-        uint256 err;
-
-        // Redeem `amountOfJSeizeTokensToRedeem` jSeizeTokens for underlying seize tokens
-        if (isSeizeNative) {
-            err = JWrappedNativeInterface(_jSeizeTokenAddress).redeemNative(
-                amountOfJSeizeTokensToRedeem
-            );
-        } else {
-            err = jSeizeToken.redeem(amountOfJSeizeTokensToRedeem);
-        }
-
-        require(
-            err == 0,
-            "JoeLiquidator: Error occurred trying to redeem underlying seize tokens"
-        );
-        console.log(
-            "[JoeLiquidator] Successfully redeemed %d jSeizeTokens with address:",
-            amountOfJSeizeTokensToRedeem
-        );
-        console.logAddress(_jSeizeTokenAddress);
     }
 
     function _approveFlashLoanToken(
