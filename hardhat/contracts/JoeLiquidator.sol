@@ -60,8 +60,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     /// We need to receive AVAX when we liquidating a native borrow position.
     receive() external payable {}
 
-    // =================== MODIFIERS ===================
-
     /**
      * @notice Ensure that we can liquidate the borrower
      * @dev A borrower is liquidatable if:
@@ -202,6 +200,24 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
 
         return maxAmountInUSD / repayTokenUnderlyingPrice;
+    }
+
+    /**
+     * @dev Gets an account's balanceOfUnderlying for a given jToken
+     * @param _jTokenAddress The address of a jToken contract
+     * @param _account The address the account to lookup
+     * @return the account's balanceOfUnderlying in jToken
+     */
+    function _getBalanceOfUnderlying(address _jTokenAddress, address _account)
+        internal
+        view
+        returns (uint256)
+    {
+        JTokenInterface jToken = JTokenInterface(_jTokenAddress);
+
+        // From https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L128
+        Exp memory exchangeRate = Exp({mantissa: jToken.exchangeRateStored()});
+        return mul_ScalarTruncate(exchangeRate, jToken.balanceOf(_account));
     }
 
     /**
@@ -817,18 +833,5 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         returns (uint256[] memory amounts)
     {
         return JoeRouter02(joeRouter02Address).getAmountsOut(_amountIn, _path);
-    }
-
-    function _getBalanceOfUnderlying(
-        address _jSeizeTokenAddress,
-        address _owner
-    ) internal view returns (uint256) {
-        JTokenInterface jSeizeToken = JTokenInterface(_jSeizeTokenAddress);
-
-        // From https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L128
-        Exp memory exchangeRate = Exp({
-            mantissa: jSeizeToken.exchangeRateStored()
-        });
-        return mul_ScalarTruncate(exchangeRate, jSeizeToken.balanceOf(_owner));
     }
 }
