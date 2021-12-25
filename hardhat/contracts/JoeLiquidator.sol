@@ -265,6 +265,22 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         jTokenToFlashLoan.flashLoan(this, msg.sender, flashLoanAmount, data);
     }
 
+    function _getFlashLoanAmount(
+        address _underlyingRepayToken,
+        uint256 _repayAmount,
+        bool _isRepayTokenUSDC
+    ) internal view returns (uint256) {
+        address[] memory path = new address[](2);
+        if (_isRepayTokenUSDC) {
+            path[0] = WETH;
+        } else {
+            path[0] = USDC;
+        }
+        path[1] = _underlyingRepayToken;
+        return
+            JoeRouter02(joeRouter02Address).getAmountsIn(_repayAmount, path)[0];
+    }
+
     /**
      * @dev Called by `ERC3156FlashLenderInterface` upon request of a flash loan
      * @param _initiator The address that initiated this flash loan
@@ -809,22 +825,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             console.logAddress(jUSDCAddress);
             return JCollateralCapErc20Delegator(jUSDCAddress);
         }
-    }
-
-    function _getFlashLoanAmount(
-        address _underlyingRepayToken,
-        uint256 _repayAmount,
-        bool _isRepayTokenUSDC
-    ) internal view returns (uint256) {
-        address[] memory path = new address[](2);
-        if (_isRepayTokenUSDC) {
-            path[0] = WETH;
-        } else {
-            path[0] = USDC;
-        }
-        path[1] = _underlyingRepayToken;
-        return
-            JoeRouter02(joeRouter02Address).getAmountsIn(_repayAmount, path)[0];
     }
 
     function _getAmountsOut(uint256 _amountIn, address[] memory _path)
