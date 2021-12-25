@@ -3,14 +3,12 @@ const fetch = require('isomorphic-unfetch');
 const { createClient, gql } = require('@urql/core');
 
 const JOE_LIQUIDATOR_ABI = require('./abis/JoeLiquidator');
-const WETH_ABI = require('./abis/WETH');
 
 const { JOE_LIQUIDATOR_CONTRACT_ADDRESS, WALLET_PRIVATE_KEY } = process.env;
 
 const INTERVAL_IN_MS = 30000;
-const WETH_CONTRACT_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
-// From https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts
+/// From https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts
 const TRADER_JOE_LENDING_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/traderjoe-xyz/lending';
 const UNDERWATER_ACCOUNTS_QUERY = gql`
   query {
@@ -43,6 +41,9 @@ const URQL_CLIENT = createClient({
   url: TRADER_JOE_LENDING_GRAPH_URL,
 });
 
+/**
+ * Returns jToken address and symbol from a token.
+ */
 const getJTokenData = (token) => {
   const { id, market } = token;
   const { symbol } = market;
@@ -55,18 +56,32 @@ const getJTokenData = (token) => {
   };
 }
 
+/**
+ * Returns borrow value in USD from a token. 
+ * Calculated as `borrowBalanceUnderlying` * `underlyingPriceUSD`.
+ */
 const getBorrowValueInUSD = (token) => {
   const { borrowBalanceUnderlying: borrowBalanceUnderlyingStr, market } = token;
   const { underlyingPriceUSD: underlyingPriceUSDStr } = market;
   return parseFloat(borrowBalanceUnderlyingStr) * parseFloat(underlyingPriceUSDStr);
 }
 
+/**
+ * Returns supply value in USD from a token. 
+ * Calculated as `supplyBalanceUnderlying` * `underlyingPriceUSD`.
+ */
 const getSupplyValueInUSD = (token) => {
   const { supplyBalanceUnderlying: supplyBalanceUnderlyingStr, market } = token;
   const { underlyingPriceUSD: underlyingPriceUSDStr } = market;
   return parseFloat(supplyBalanceUnderlyingStr) * parseFloat(underlyingPriceUSDStr);
 }
 
+/**
+ * Finds a supply position to seize given a borrow position to repay.
+ * Requirements are:
+ * - `enteredMarket === true` to have been posted as collateral
+ * - `supplyValue >= borrowValue * 0.5`
+ */
 const findSupplyPositionToSeize = (tokens, borrowId, borrowValue) => {
   for (const token of tokens) {
     const { enteredMarket, id: supplyId } = token;
@@ -86,6 +101,10 @@ const findSupplyPositionToSeize = (tokens, borrowId, borrowValue) => {
   return null;
 }
 
+/**
+ * Finds a supply position to seize given a borrow position to repay given
+ * the tokens of an underwater account.
+ */
 const findBorrowAndSupplyPosition = (tokens) => {
   for (const token of tokens) {
     const { id: borrowId } = token;
@@ -100,6 +119,9 @@ const findBorrowAndSupplyPosition = (tokens) => {
   return null;
 }
 
+/**
+ * Returns a `JoeLiquidator` contract to interact with.
+ */
 const getJoeLiquidatorContract = () => {
   // Following https://medium.com/coinmonks/hello-world-smart-contract-using-ethers-js-e33b5bf50c19
   const provider = ethers.getDefaultProvider();
@@ -109,6 +131,10 @@ const getJoeLiquidatorContract = () => {
 
 const JOE_LIQUIDATOR_CONTRACT = getJoeLiquidatorContract();
 
+/**
+ * Tries to liquidate an account by searching for a borrow position to repay and
+ * supply position to seize.
+ */
 const tryLiquidateAccount = async (account) => {
   const { tokens } = account;
 
@@ -130,14 +156,17 @@ const tryLiquidateAccount = async (account) => {
     `on ${jRepayTokenSymbol} and supply position on ${jSeizeTokenSymbol}`
   );
 
-  // TODO: Uncomment this
-  // await JOE_LIQUIDATOR_CONTRACT.liquidate(
-  //   borrowerToLiquidateAddress,
-  //   jRepayTokenAddress,
-  //   jSeizeTokenAddress
-  // );
+  await JOE_LIQUIDATOR_CONTRACT.liquidate(
+    borrowerToLiquidateAddress,
+    jRepayTokenAddress,
+    jSeizeTokenAddress
+  );
 }
 
+/**
+ * Queries the Banker Joe lending subgraph for underwater accounst and attemps
+ * to perform liquidation using `JoeLiquidator.sol`.
+ */
 const run = async () => {
   URQL_CLIENT.query(UNDERWATER_ACCOUNTS_QUERY)
     .toPromise()
@@ -159,5 +188,5 @@ const run = async () => {
 console.log("🔧 Bot starting up...");
 console.log(`🔁 Bot will query the subgraph every ${INTERVAL_IN_MS / 1000} seconds to search for liquidatable accounts...`);
 
-// Query the subgraph and attempt to perform liquidation every INTERVAL_IN_MS
+/// Query the subgraph and attempt to perform liquidation every INTERVAL_IN_MS
 setInterval(run, INTERVAL_IN_MS);
