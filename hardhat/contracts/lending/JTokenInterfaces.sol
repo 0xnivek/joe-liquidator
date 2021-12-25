@@ -19,6 +19,8 @@ interface JTokenInterface is JTokenStorage {
 
     function borrowRatePerSecond() external view returns (uint256);
 
+    function supplyRatePerSecond() external view returns (uint256);
+
     function borrowBalanceCurrent(address account)
         external
         view
