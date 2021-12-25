@@ -10,16 +10,16 @@ const {
 } = require("ethereum-waffle");
 const { isCallTrace } = require("hardhat/internal/hardhat-network/stack-traces/message-trace");
 
+const { SECONDS_IN_MINUTE, SECONDS_IN_HOUR, SECONDS_IN_DAY, getTxnLogs } = require("./utils/helpers");
+
 // Based on https://github.com/Sanghren/avalanche-hardhat-fork-tutorial
 const AVALANCHE_NODE_URL = "https://api.avax.network/ext/bc/C/rpc";
 
 
 use(solidity);
 
-const ONLY_OWNER_ERROR_MSG = "Ownable: caller is not the owner";
 const JOETROLLER_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
 const JOE_ROUTER_02_ADDRESS = "0x60aE616a2155Ee3d9A68541Ba4544862310933d4";
-const JAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
 const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
 const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
 const JLINKE_ADDRESS = "0x585E7bC75089eD111b656faA7aeb1104F5b96c15";
@@ -27,37 +27,15 @@ const JUSDTE_ADDRESS = "0x8b650e26404AC6837539ca96812f0123601E4448";
 
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const WETHE = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
-const WBTCE = "0x50b7545627a5162F82A992c33b87aDc75187B218";
-const USDCE = "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664";
 const USDTE = "0xc7198437980c041c805A1EDcbA50c1Ce5db95118";
-const DAIE = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
 const LINKE = "0x5947BB275c521040051D82396192181b413227A3";
-const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
-
-const SECONDS_IN_MINUTE = 60;
-const SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
-const SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
-
-const getTxnLogs = (contract, txnReceipt) => {
-  const logs = [];
-  for (const log of txnReceipt.logs) {
-    try {
-      logs.push(contract.interface.parseLog(log));
-    } catch (err) {
-      // Means that log isn't an event emitted from our contract
-    }
-  }
-  return logs;
-}
 
 describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
-  let jAVAXContract;
   let jLINKEContract;
   let jUSDTEContract;
-  let wavaxContract;
   let linkeContract;
 
   let owner;
@@ -86,10 +64,8 @@ describe("JoeLiquidator", function () {
 
     joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
     joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
-    jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
     jLINKEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINKE_ADDRESS);
     jUSDTEContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JUSDTE_ADDRESS);
-    wavaxContract = await ethers.getContractAt("WAVAXInterface", WAVAX);
     linkeContract = await ethers.getContractAt("ERC20", LINKE);
 
     [owner, addr1, addr2] = await ethers.getSigners();
