@@ -290,6 +290,28 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
+     * @dev Gets the jToken to flash loan. We always flash loan from jUSDC unless
+     * the repay token is USDC in which case we flash loan from jWETH.
+     * @param _isRepayTokenUSDC Whether the token of the borrow position to repay is USDC
+     * @return The jToken to flash loan
+     */
+    function _getJTokenToFlashLoan(bool _isRepayTokenUSDC)
+        internal
+        view
+        returns (JCollateralCapErc20Delegator)
+    {
+        if (_isRepayTokenUSDC) {
+            console.log("[JoeLiquidator] Flash loaning from:");
+            console.logAddress(jWETHAddress);
+            return JCollateralCapErc20Delegator(jWETHAddress);
+        } else {
+            console.log("[JoeLiquidator] Flash loaning from:");
+            console.logAddress(jUSDCAddress);
+            return JCollateralCapErc20Delegator(jUSDCAddress);
+        }
+    }
+
+    /**
      * @dev Called by `ERC3156FlashLenderInterface` upon request of a flash loan
      * @param _initiator The address that initiated this flash loan
      * @param _flashLoanTokenAddress The address of the flash loan jToken's underlying asset
@@ -817,22 +839,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         // Approve flash loan lender to retrieve loan amount + fee from us
         flashLoanToken.approve(msg.sender, _flashLoanAmountToRepay);
-    }
-
-    function _getJTokenToFlashLoan(bool _isRepayTokenUSDC)
-        internal
-        view
-        returns (JCollateralCapErc20Delegator)
-    {
-        if (_isRepayTokenUSDC) {
-            console.log("[JoeLiquidator] Flash loaning from:");
-            console.logAddress(jWETHAddress);
-            return JCollateralCapErc20Delegator(jWETHAddress);
-        } else {
-            console.log("[JoeLiquidator] Flash loaning from:");
-            console.logAddress(jUSDCAddress);
-            return JCollateralCapErc20Delegator(jUSDCAddress);
-        }
     }
 
     function _getAmountsOut(uint256 _amountIn, address[] memory _path)
