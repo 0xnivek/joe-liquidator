@@ -208,13 +208,14 @@ describe("JoeLiquidator", function () {
       await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 80]);
       await ethers.provider.send("evm_mine");
 
+      // Need to accrue interest for both the borrow and supply jToken, otherwise
+      // we run into this error in JToken#liquidateBorrowFresh:
+      // https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L726-L732
       const accrueNativeInterestTxn = await jAVAXContract.accrueInterest();
       await accrueNativeInterestTxn.wait();
 
       const accrueJMIMInterestTxn = await jMIMContract.accrueInterest();
       await accrueJMIMInterestTxn.wait();
-
-      await ethers.provider.send("evm_mine");
 
       const jNativeBorrowBalanceAfterMining = await jAVAXContract.borrowBalanceCurrent(owner.address);
       console.log("jAVAX BORROW BALANCE AFTER MINING:", jNativeBorrowBalanceAfterMining);
