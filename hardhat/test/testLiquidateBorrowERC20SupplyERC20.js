@@ -232,7 +232,6 @@ describe("JoeLiquidator", function () {
       console.log("Starting liquidation...");
       const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(owner.address, JUSDTE_ADDRESS, JLINKE_ADDRESS);
       const liquidationTxnReceipt = await liquidateTxn.wait();
-      console.log("LIQUIDATION RECEIPT:", liquidationTxnReceipt);
 
       const liquidationTxnLogs = getTxnLogs(joeLiquidatorContract, liquidationTxnReceipt);
 
@@ -250,7 +249,6 @@ describe("JoeLiquidator", function () {
         profitedAvax,
         ...rest
       ] = liquidationEventLog.args;
-      console.log(liquidationEventLog.args);
 
       expect(borrowerLiquidated).to.equal(owner.address);
       expect(jRepayTokenAddress).to.equal(JUSDTE_ADDRESS);

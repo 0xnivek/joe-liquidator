@@ -179,7 +179,7 @@ describe("JoeLiquidator", function () {
 
       /// 7. Increase time, mine block, and accrue interest so that we can make account liquidatable!
       // 80
-      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 10]);
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 80]);
       await ethers.provider.send("evm_mine");
 
       // Need to accrue interest for both the borrow and supply jToken, otherwise
@@ -211,7 +211,6 @@ describe("JoeLiquidator", function () {
         jSeizeTokenAddress // jSeizeTokenAddress
       );
       const liquidationTxnReceipt = await liquidateTxn.wait();
-      console.log("LIQUIDATION RECEIPT:", liquidationTxnReceipt);
 
       const liquidationTxnLogs = getTxnLogs(joeLiquidatorContract, liquidationTxnReceipt);
 
@@ -229,7 +228,6 @@ describe("JoeLiquidator", function () {
         profitedAvaxFromEvent,
         ...rest
       ] = liquidationEventLog.args;
-      console.log(liquidationEventLog.args);
 
       expect(borrowerLiquidatedFromEvent).to.equal(owner.address);
       expect(jRepayTokenAddressFromEvent).to.equal(jRepayTokenAddress);

@@ -22,12 +22,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
      */
     address public joetrollerAddress;
     address public joeRouter02Address;
-    address public jUSDCEAddress;
-    address public jWETHEAddress;
+    address public jUSDCAddress;
+    address public jWETHAddress;
 
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
-    address public constant WETHE = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
-    address public constant USDCE = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
+    address public constant WETH = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
+    address public constant USDC = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
 
     struct LiquidationLocalVars {
         address jRepayTokenAddress;
@@ -47,13 +47,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     constructor(
         address _joetrollerAddress,
         address _joeRouter02Address,
-        address _jUSDCEAddress,
-        address _jWETHEAddress
+        address _jUSDCAddress,
+        address _jWETHAddress
     ) {
         joetrollerAddress = _joetrollerAddress;
         joeRouter02Address = _joeRouter02Address;
-        jUSDCEAddress = _jUSDCEAddress;
-        jWETHEAddress = _jWETHEAddress;
+        jUSDCAddress = _jUSDCAddress;
+        jWETHAddress = _jWETHAddress;
     }
 
     modifier isLiquidatable(address _borrowerToLiquidate) {
@@ -111,6 +111,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jRepayTokenAddress,
         address _jSeizeTokenAddress
     ) internal view returns (uint256) {
+        // Inspired from https://github.com/haydenshively/Nantucket/blob/538bd999c9cc285efb403c876e5f4c3d467a2d68/contracts/FlashLiquidator.sol#L121-L144
+
         Joetroller joetroller = Joetroller(joetrollerAddress);
         PriceOracle priceOracle = joetroller.oracle();
 
@@ -156,7 +158,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 maxSeizeAmount = (_getBalanceOfUnderlying(
             _jSeizeTokenAddress,
             _borrowerToLiquidate
-        ) * liquidationIncentive) / uint256(10**18);
+        ) * uint256(10**18)) / liquidationIncentive;
 
         console.log(
             "[JoeLiquidator] Got max repay and seize amounts...",
@@ -197,17 +199,17 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     ) internal {
         address underlyingRepayToken = JErc20Storage(_jRepayTokenAddress)
             .underlying();
-        bool isRepayTokenUSDCE = underlyingRepayToken == USDCE;
+        bool isRepayTokenUSDC = underlyingRepayToken == USDC;
 
         uint256 flashLoanAmount = _getFlashLoanAmount(
             underlyingRepayToken,
             _repayAmount,
-            isRepayTokenUSDCE
+            isRepayTokenUSDC
         );
 
         // We will only ever flash loan from jUSDC or jWETH
         JCollateralCapErc20Delegator jTokenToFlashLoan = _getJTokenToFlashLoan(
-            isRepayTokenUSDCE
+            isRepayTokenUSDC
         );
 
         bytes memory data = abi.encode(
@@ -769,32 +771,32 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         flashLoanToken.approve(msg.sender, _flashLoanAmountToRepay);
     }
 
-    function _getJTokenToFlashLoan(bool _isRepayTokenUSDCE)
+    function _getJTokenToFlashLoan(bool _isRepayTokenUSDC)
         internal
         view
         returns (JCollateralCapErc20Delegator)
     {
-        if (_isRepayTokenUSDCE) {
+        if (_isRepayTokenUSDC) {
             console.log("[JoeLiquidator] Flash loaning from:");
-            console.logAddress(jWETHEAddress);
-            return JCollateralCapErc20Delegator(jWETHEAddress);
+            console.logAddress(jWETHAddress);
+            return JCollateralCapErc20Delegator(jWETHAddress);
         } else {
             console.log("[JoeLiquidator] Flash loaning from:");
-            console.logAddress(jUSDCEAddress);
-            return JCollateralCapErc20Delegator(jUSDCEAddress);
+            console.logAddress(jUSDCAddress);
+            return JCollateralCapErc20Delegator(jUSDCAddress);
         }
     }
 
     function _getFlashLoanAmount(
         address _underlyingRepayToken,
         uint256 _repayAmount,
-        bool _isRepayTokenUSDCE
+        bool _isRepayTokenUSDC
     ) internal view returns (uint256) {
         address[] memory path = new address[](2);
-        if (_isRepayTokenUSDCE) {
-            path[0] = WETHE;
+        if (_isRepayTokenUSDC) {
+            path[0] = WETH;
         } else {
-            path[0] = USDCE;
+            path[0] = USDC;
         }
         path[1] = _underlyingRepayToken;
         return
