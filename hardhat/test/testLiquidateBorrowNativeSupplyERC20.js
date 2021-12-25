@@ -20,9 +20,9 @@ const ONLY_OWNER_ERROR_MSG = "Ownable: caller is not the owner";
 const JOETROLLER_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
 const JOE_ROUTER_02_ADDRESS = "0x60aE616a2155Ee3d9A68541Ba4544862310933d4";
 const JAVAX_ADDRESS = "0xC22F01ddc8010Ee05574028528614634684EC29e";
-const JMIM_ADDRESS = "0xcE095A9657A02025081E0607c8D8b081c76A75ea";
-const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
+const JLINK_ADDRESS = "0x585E7bC75089eD111b656faA7aeb1104F5b96c15";
 const JUSDCE_ADDRESS = "0xEd6AaF91a2B084bd594DBd1245be3691F9f637aC";
+const JWETHE_ADDRESS = "0x929f5caB61DFEc79a5431a7734a68D714C4633fa";
 
 const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const WETHE = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
@@ -30,7 +30,7 @@ const WBTCE = "0x50b7545627a5162F82A992c33b87aDc75187B218";
 const USDCE = "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664";
 const USDTE = "0xc7198437980c041c805A1EDcbA50c1Ce5db95118";
 const DAIE = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
-const LINKE = "0x5947BB275c521040051D82396192181b413227A3";
+const LINK = "0x5947BB275c521040051D82396192181b413227A3";
 const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
 
 const SECONDS_IN_MINUTE = 60;
@@ -54,9 +54,9 @@ describe("JoeLiquidator", function () {
   let joetrollerContract;
   let joeRouterContract;
   let jAVAXContract;
-  let jMIMContract;
+  let jLINKContract;
   let wavaxContract;
-  let mimContract;
+  let linkContract;
 
   let owner;
   let addr1;
@@ -85,18 +85,18 @@ describe("JoeLiquidator", function () {
     joetrollerContract = await ethers.getContractAt("Joetroller", JOETROLLER_ADDRESS);
     joeRouterContract = await ethers.getContractAt("JoeRouter02", JOE_ROUTER_02_ADDRESS);
     jAVAXContract = await ethers.getContractAt("JWrappedNativeDelegator", JAVAX_ADDRESS);
-    jMIMContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JMIM_ADDRESS);
+    jLINKContract = await ethers.getContractAt("JCollateralCapErc20Delegator", JLINK_ADDRESS);
     wavaxContract = await ethers.getContractAt("WAVAXInterface", WAVAX);
-    mimContract = await ethers.getContractAt("ERC20", MIM);
+    linkContract = await ethers.getContractAt("ERC20", LINK);
 
     [owner, addr1, addr2] = await ethers.getSigners();
   });
 
   describe("Test liquidate native borrow position and ERC20 supply position", function () {
     // Collateral factor of jAVAX (borrow): 0.75
-    // Collateral factor of jMIM (supply): 0.6
+    // Collateral factor of jLINK (supply): 0.6
     // Queried by using Joetroller#markets(address _jTokenAddress) => Market
-    it("Test liquidate native borrow position and MIM supply position", async function () {
+    it("Test liquidate native borrow position and LINK supply position", async function () {
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 
@@ -106,59 +106,59 @@ describe("JoeLiquidator", function () {
       console.log("LIQUIDITY BEGINNING:", liquidityBeginning);
       console.log("SHORTFUL BEGINNING:", shortfallBeginning);
 
-      /// 0. Swap AVAX for 1000 MIM
+      /// 0. Swap AVAX for 100 LINK
       /// Notes: 
-      /// 1. 8.763 AVAX ~= 1000 MIM
+      /// 1. 18.9 AVAX ~= 100 LINK
       /// 2. AVAX is 18 decimals
-      /// 3. MIM is 18 decimals
-      const amountOfAVAXToSwap = ethers.utils.parseEther("10");
-      const amountOfMIMToSupply = ethers.utils.parseEther("1000");
+      /// 3. LINK is 18 decimals
+      const amountOfAVAXToSwap = ethers.utils.parseEther("30");
+      const amountOfLINKToSupply = ethers.utils.parseEther("100");
 
-      const mimBalanceBeforeSwap = await mimContract.balanceOf(owner.address);
-      expect(mimBalanceBeforeSwap.eq(0)).to.equal(true);
-      console.log("MIM BALANCE BEFORE SWAP:", mimBalanceBeforeSwap);
+      const linkBalanceBeforeSwap = await linkContract.balanceOf(owner.address);
+      expect(linkBalanceBeforeSwap.eq(0)).to.equal(true);
+      console.log("LINK BALANCE BEFORE SWAP:", linkBalanceBeforeSwap);
 
       const currentBlock = await ethers.provider.getBlock();
-      const swapAVAXForMIM = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
-        amountOfMIMToSupply, // amountOutMin
-        [WAVAX, MIM], // path
+      const swapAVAXForLINK = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
+        amountOfLINKToSupply, // amountOutMin
+        [WAVAX, LINK], // path
         owner.address, // to
         currentBlock.timestamp + SECONDS_IN_MINUTE, // deadline
         { value: amountOfAVAXToSwap }
       );
-      await swapAVAXForMIM.wait();
+      await swapAVAXForLINK.wait();
 
-      const mimBalanceAfterSwap = await mimContract.balanceOf(owner.address);
-      expect(mimBalanceAfterSwap.gt(0)).to.equal(true);
-      console.log("MIM BALANCE AFTER SWAP:", mimBalanceAfterSwap);
+      const linkBalanceAfterSwap = await linkContract.balanceOf(owner.address);
+      expect(linkBalanceAfterSwap.gt(0)).to.equal(true);
+      console.log("LINK BALANCE AFTER SWAP:", linkBalanceAfterSwap);
 
-      /// 1. Supply 1000 MIM to jMIM contract as collateral
-      const jMIMBalanceUnderlyingBefore = await jMIMContract.balanceOfUnderlying(owner.address);
-      console.log("OWNER jMIM BALANCE UNDERLYING BEFORE", jMIMBalanceUnderlyingBefore);
-      expect(jMIMBalanceUnderlyingBefore).to.equal(0);
+      /// 1. Supply 100 LINK to jLINK contract as collateral
+      const jLINKBalanceUnderlyingBefore = await jLINKContract.balanceOfUnderlying(owner.address);
+      console.log("OWNER jLINK BALANCE UNDERLYING BEFORE", jLINKBalanceUnderlyingBefore);
+      expect(jLINKBalanceUnderlyingBefore).to.equal(0);
 
-      // Approve jUSDT.e contract to take USDT.e
-      const approveJMIMTxn = await mimContract.connect(owner).approve(JMIM_ADDRESS, amountOfMIMToSupply)
-      await approveJMIMTxn.wait();
+      // Approve jLINK contract to take LINK
+      const approveJLINKTxn = await linkContract.connect(owner).approve(JLINK_ADDRESS, amountOfLINKToSupply)
+      await approveJLINKTxn.wait();
 
-      // Supply MIM to jMIM contract
-      const mintMIMTxn = await jMIMContract.connect(owner).mint(amountOfMIMToSupply);
-      await mintMIMTxn.wait();
-      console.log("Supplying MIM as collateral to jMIM...");
+      // Supply LINK to jLINK contract
+      const mintLINKTxn = await jLINKContract.connect(owner).mint(amountOfLINKToSupply);
+      await mintLINKTxn.wait();
+      console.log("Supplying LINK as collateral to jLINK...");
 
-      const jMIMBalanceUnderlyingAfter = await jMIMContract.balanceOfUnderlying(owner.address);
-      console.log("OWNER jMIM BALANCE UNDERLYING AFTER", jMIMBalanceUnderlyingAfter);
-      expect(jMIMBalanceUnderlyingAfter.gt(0)).to.equal(true);
+      const jLINKBalanceUnderlyingAfter = await jLINKContract.balanceOfUnderlying(owner.address);
+      console.log("OWNER jLINK BALANCE UNDERLYING AFTER", jLINKBalanceUnderlyingAfter);
+      expect(jLINKBalanceUnderlyingAfter.gt(0)).to.equal(true);
 
-      /// 2. Enter market via Joetroller for jUSDT.e for using USDT.e as collateral
+      /// 2. Enter market via Joetroller for jLINK for using LINK as collateral
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JMIM_ADDRESS)
+          .checkMembership(owner.address, JLINK_ADDRESS)
       ).to.equal(false);
-      await joetrollerContract.connect(owner).enterMarkets([JMIM_ADDRESS])
+      await joetrollerContract.connect(owner).enterMarkets([JLINK_ADDRESS])
       expect(
         await joetrollerContract
-          .checkMembership(owner.address, JMIM_ADDRESS)
+          .checkMembership(owner.address, JLINK_ADDRESS)
       ).to.equal(true);
 
 
@@ -169,6 +169,7 @@ describe("JoeLiquidator", function () {
       console.log("SHORTFUL BEFORE BORROW:", shortfallBeforeBorrow);
 
 
+      // TODO: Assert borrowRatePerSecond > supplyRatePerSecond?
       // /// 4. Fetch borrow rate per second for jUSDT.e
       // const jUSDTEBorrowRatePerSecond = await jUSDTEContract.borrowRatePerSecond();
       // expect(jUSDTEBorrowRatePerSecond.gt(0)).to.equal(true);
@@ -177,20 +178,20 @@ describe("JoeLiquidator", function () {
 
       /// 6. Borrow AVAX from jAVAX contract.
       /// Notes: 
-      /// - We supplied 1000 MIM
-      /// - Collateral factor of MIM is 0.6
-      /// - 5.23 AVAX ~= 600 MIM so we should borrow 4 AVAX
+      /// - We supplied 100 LINK
+      /// - Collateral factor of LINK is 0.6
+      /// - 11.36 AVAX ~= 60 LINK so we should borrow 8 AVAX
       /// - AVAX has 18 decimals
-      /// - MIM has 18 decimals
+      /// - LINK has 18 decimals
 
       // Confirm jAVAX borrowBalanceCurrent is 0 before we borrow
       const jNativeBorrowBalanceBefore = await jAVAXContract.borrowBalanceCurrent(owner.address);
       console.log("jAVAX BORROW BALANCE BEFORE:", jNativeBorrowBalanceBefore);
       expect(jNativeBorrowBalanceBefore).to.equal(0);
 
-      // Borrow 4 AVAX from jAVAX contract
+      // Borrow 8 AVAX from jAVAX contract
       console.log("Borrowing...");
-      const amountOfNativeToBorrow = ethers.utils.parseEther("4");
+      const amountOfNativeToBorrow = ethers.utils.parseEther("8");
       const borrowTxn = await jAVAXContract.connect(owner).borrowNative(amountOfNativeToBorrow);
       await borrowTxn.wait();
 
@@ -204,8 +205,7 @@ describe("JoeLiquidator", function () {
       console.log("SHORTFALL AFTER BORROW:", shortfallAfterBorrow);
 
       /// 7. Increase time, mine block, and accrue interest so that we can make account liquidatable!
-      // 80
-      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 80]);
+      await ethers.provider.send("evm_increaseTime", [SECONDS_IN_DAY * 30 * 12 * 10]);
       await ethers.provider.send("evm_mine");
 
       // Need to accrue interest for both the borrow and supply jToken, otherwise
@@ -214,8 +214,8 @@ describe("JoeLiquidator", function () {
       const accrueNativeInterestTxn = await jAVAXContract.accrueInterest();
       await accrueNativeInterestTxn.wait();
 
-      const accrueJMIMInterestTxn = await jMIMContract.accrueInterest();
-      await accrueJMIMInterestTxn.wait();
+      const accrueJLINKInterestTxn = await jLINKContract.accrueInterest();
+      await accrueJLINKInterestTxn.wait();
 
       const jNativeBorrowBalanceAfterMining = await jAVAXContract.borrowBalanceCurrent(owner.address);
       console.log("jAVAX BORROW BALANCE AFTER MINING:", jNativeBorrowBalanceAfterMining);
@@ -230,7 +230,7 @@ describe("JoeLiquidator", function () {
       /// 8. Liquidate account!
       console.log("Starting liquidation...");
       const jRepayTokenAddress = JAVAX_ADDRESS;
-      const jSeizeTokenAddress = JMIM_ADDRESS;
+      const jSeizeTokenAddress = JLINK_ADDRESS;
       const liquidateTxn = await joeLiquidatorContract.connect(addr1).liquidate(
         owner.address, // borrowerToLiquidate
         jRepayTokenAddress, // jRepayTokenAddress
