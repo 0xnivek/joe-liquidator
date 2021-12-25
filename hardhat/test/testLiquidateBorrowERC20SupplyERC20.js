@@ -76,26 +76,35 @@ describe("JoeLiquidator", function () {
   });
 
   describe("Test liquidate ERC20 borrow position and ERC20 supply position", function () {
-    // Collateral factor of jUSDT (borrow): 0.8
-    // Collateral factor of jLINK (supply): 0.6
+    // Borrow rate of jUSDT: 4479306196
+    // Supply rate of jLINK: 23427275
     it("Test liquidate USDT borrow position and LINK supply position", async function () {
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 
       // Following guide here: https://medium.com/compound-finance/borrowing-assets-from-compound-quick-start-guide-f5e69af4b8f4
 
-      const [errBeginning, liquidityBeginning, shortfallBeginning] = await joetrollerContract.getAccountLiquidity(owner.address);
-      console.log("LIQUIDITY BEGINNING:", liquidityBeginning);
-      console.log("SHORTFUL BEGINNING:", shortfallBeginning);
+      // Ensure liquidity and shortfall is 0 before we do anything
+      const [errBeginning, liquidityBeginning, shortfallBeginning] =
+        await joetrollerContract.getAccountLiquidity(owner.address);
+      expect(liquidityBeginning.eq(0)).to.equal(true);
+      expect(shortfallBeginning.eq(0)).to.equal(true);
 
-      /// 0. Swap AVAX for 1 LINK.e
-      /// Note: 0.165 AVAX ~= 1 LINK.e
+      /// 1. Swap AVAX for 1 LINK so that we can supply LINK to jLINK
+      /// Note: 
+      /// - 0.165 AVAX ~= 1 LINK
+      /// - AVAX is 18 decimals
+      /// - is 18 decimals
+
+      // Swap more AVAX just to make sure we get at least 1 LINK in return
       const amountOfAVAXToSwap = ethers.utils.parseEther("0.5");
+      const amountOfLINKEToSupply = ethers.utils.parseEther("1");
 
+      // Ensure that our LINK balance is 0 before the swap
       const linkeBalanceBeforeSwap = await linkeContract.balanceOf(owner.address);
       expect(linkeBalanceBeforeSwap.eq(0)).to.equal(true);
-      console.log("LINKE BALANCE BEFORE SWAP:", linkeBalanceBeforeSwap);
 
+      // Perform the swap
       const currentBlock = await ethers.provider.getBlock();
       const swapAVAXForLINKE = await joeRouterContract.connect(owner).swapExactAVAXForTokens(
         ethers.utils.parseEther("1"),
@@ -106,17 +115,15 @@ describe("JoeLiquidator", function () {
       );
       await swapAVAXForLINKE.wait();
 
+      // Ensuer that our LINK balance after the swap is at least 1 LINK
       const linkeBalanceAfterSwap = await linkeContract.balanceOf(owner.address);
-      expect(linkeBalanceAfterSwap.gt(0)).to.equal(true);
+      expect(linkeBalanceAfterSwap.gte(amountOfLINKEToSupply)).to.equal(true);
       console.log("LINKE BALANCE AFTER SWAP:", linkeBalanceAfterSwap);
 
       /// 1. Supply 1 LINK.e to jLINK contract as collateral
       const jLINKEBalanceUnderlyingBefore = await jLINKEContract.balanceOfUnderlying(owner.address);
       console.log("OWNER jLINK.e BALANCE UNDERLYING BEFORE", jLINKEBalanceUnderlyingBefore);
       expect(jLINKEBalanceUnderlyingBefore).to.equal(0);
-
-      // Note: LINK.e is 18 decimals
-      const amountOfLINKEToSupply = ethers.utils.parseEther("1");
 
       // Approve jLINK.e contract to take LINK.e
       const approveJLINKETxn = await linkeContract.connect(owner).approve(JLINKE_ADDRESS, amountOfLINKEToSupply)
