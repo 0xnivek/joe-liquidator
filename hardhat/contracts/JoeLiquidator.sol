@@ -27,14 +27,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
     address public constant WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
     address public constant WETHE = 0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB;
-    address public constant WBTCE = 0x50b7545627a5162F82A992c33b87aDc75187B218;
     address public constant USDCE = 0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664;
-    address public constant USDTE = 0xc7198437980c041c805A1EDcbA50c1Ce5db95118;
-    address public constant DAIE = 0xd586E7F844cEa2F87f50152665BCbc2C279D8d70;
-    address public constant LINKE = 0x5947BB275c521040051D82396192181b413227A3;
-    address public constant MIM = 0x130966628846BFd36ff31a822705796e8cb8C18D;
 
-    struct LiquidationData {
+    struct LiquidationLocalVars {
         address jRepayTokenAddress;
         address jSeizeTokenAddress;
         address borrowerToLiquidate;
@@ -252,12 +247,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         console.log("[JoeLiquidator] The flash loan token address is:");
         console.logAddress(_flashLoanTokenAddress);
 
-        LiquidationData memory liquidationData = _getLiquidationData(
-            _initiator,
-            _flashLoanTokenAddress,
-            _flashLoanAmount,
-            _data
-        );
+        LiquidationLocalVars
+            memory liquidationLocalVars = _getLiquidationLocalVars(
+                _initiator,
+                _flashLoanTokenAddress,
+                _flashLoanAmount,
+                _data
+            );
 
         uint256 flashLoanAmountToRepay = _flashLoanAmount.add(_flashLoanFee);
 
@@ -267,10 +263,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         console.log(
             "[JoeLiquidator] DEBUGGING BORROWER LIQUIDITY before _swapFlashLoanTokenToRepayToken"
         );
-        _debugLogBorrowerLiquidity(liquidationData.borrowerToLiquidate);
+        _debugLogBorrowerLiquidity(liquidationLocalVars.borrowerToLiquidate);
 
         JErc20Interface jRepayToken = JErc20Interface(
-            liquidationData.jRepayTokenAddress
+            liquidationLocalVars.jRepayTokenAddress
         );
 
         // Swap token that we flash loaned (e.g. USDC.e) to the underlying repay token
@@ -278,28 +274,28 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             _flashLoanTokenAddress,
             _flashLoanAmount,
             jRepayToken.underlying(),
-            liquidationData.repayAmount
+            liquidationLocalVars.repayAmount
         );
 
         console.log(
             "[JoeLiquidator] DEBUGGING BORROWER LIQUIDITY before _liquidateBorrow"
         );
-        _debugLogBorrowerLiquidity(liquidationData.borrowerToLiquidate);
+        _debugLogBorrowerLiquidity(liquidationLocalVars.borrowerToLiquidate);
 
         // Perform liquidation using underlying repay token and receive jSeizeTokens in return.
         _liquidateBorrow(
             jRepayToken,
-            liquidationData.borrowerToLiquidate,
-            liquidationData.repayAmount,
-            JTokenInterface(liquidationData.jSeizeTokenAddress)
+            liquidationLocalVars.borrowerToLiquidate,
+            liquidationLocalVars.repayAmount,
+            JTokenInterface(liquidationLocalVars.jSeizeTokenAddress)
         );
 
         // Redeem jSeizeTokens for underlying seize tokens
-        _redeemSeizeToken(liquidationData.jSeizeTokenAddress);
+        _redeemSeizeToken(liquidationLocalVars.jSeizeTokenAddress);
 
         // Swap seize token to flash loan token so we can repay flash loan
         _swapSeizeTokenToFlashLoanToken(
-            liquidationData.jSeizeTokenAddress,
+            liquidationLocalVars.jSeizeTokenAddress,
             _flashLoanTokenAddress,
             flashLoanAmountToRepay
         );
@@ -308,14 +304,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // to liquidator
         uint256 profitedAVAX = _swapRemainingSeizedTokenToAVAX(
             _initiator,
-            liquidationData.jSeizeTokenAddress
+            liquidationLocalVars.jSeizeTokenAddress
         );
 
         emit LiquidationEvent(
-            liquidationData.borrowerToLiquidate,
-            liquidationData.jRepayTokenAddress,
-            liquidationData.jSeizeTokenAddress,
-            liquidationData.repayAmount,
+            liquidationLocalVars.borrowerToLiquidate,
+            liquidationLocalVars.jRepayTokenAddress,
+            liquidationLocalVars.jSeizeTokenAddress,
+            liquidationLocalVars.repayAmount,
             profitedAVAX
         );
 
@@ -329,12 +325,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
 
-    function _getLiquidationData(
+    function _getLiquidationLocalVars(
         address _initiator,
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmount,
         bytes calldata _data
-    ) internal pure returns (LiquidationData memory) {
+    ) internal pure returns (LiquidationLocalVars memory) {
         (
             address initiator,
             address borrowerToLiquidate,
@@ -362,13 +358,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             "JoeLiquidator: Encoded data (flashLoanAmount) does not match"
         );
 
-        LiquidationData memory liquidationData = LiquidationData({
-            borrowerToLiquidate: borrowerToLiquidate,
-            jRepayTokenAddress: jRepayTokenAddress,
-            jSeizeTokenAddress: jSeizeTokenAddress,
-            repayAmount: repayAmount
-        });
-        return liquidationData;
+        LiquidationLocalVars
+            memory liquidationLocalVars = LiquidationLocalVars({
+                borrowerToLiquidate: borrowerToLiquidate,
+                jRepayTokenAddress: jRepayTokenAddress,
+                jSeizeTokenAddress: jSeizeTokenAddress,
+                repayAmount: repayAmount
+            });
+        return liquidationLocalVars;
     }
 
     function _swapRemainingSeizedTokenToAVAX(
@@ -511,7 +508,7 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 _repayAmount,
         JTokenInterface _jSeizeToken
     ) internal {
-        // Now we should have `liquidationData.repayAmount` of underlying repay tokens
+        // Now we should have `liquidationLocalVars.repayAmount` of underlying repay tokens
         // to liquidate the borrow position.
         bool isRepayNative = _jRepayToken.underlying() == WAVAX;
 
