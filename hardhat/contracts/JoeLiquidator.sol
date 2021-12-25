@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 import "./interfaces/ERC20Interface.sol";
 import "./interfaces/ERC3156FlashBorrowerInterface.sol";
@@ -69,12 +69,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     modifier isLiquidatable(address _borrowerToLiquidate) {
         (, uint256 liquidity, uint256 shortfall) = Joetroller(joetrollerAddress)
             .getAccountLiquidity(_borrowerToLiquidate);
-        console.log(
-            "[JoeLiquidator] Got liquidity (%d) and shortfall (%d) for borrowerToLiquidate with address:",
-            liquidity,
-            shortfall
-        );
-        console.logAddress(_borrowerToLiquidate);
         require(
             liquidity == 0,
             "JoeLiquidator: Cannot liquidate account with non-zero liquidity"
@@ -98,16 +92,10 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jRepayTokenAddress,
         address _jSeizeTokenAddress
     ) external isLiquidatable(_borrowerToLiquidate) {
-        console.log("[JoeLiquidator] Calculating amount to pay...");
         uint256 amountToRepay = getAmountToRepay(
             _borrowerToLiquidate,
             _jRepayTokenAddress,
             _jSeizeTokenAddress
-        );
-        console.log(
-            "[JoeLiquidator] Going to repay %d for token with address %s...",
-            amountToRepay,
-            _jRepayTokenAddress
         );
         doFlashloan(
             _borrowerToLiquidate,
@@ -130,44 +118,18 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jSeizeTokenAddress
     ) internal view returns (uint256) {
         // Inspired from https://github.com/haydenshively/Nantucket/blob/538bd999c9cc285efb403c876e5f4c3d467a2d68/contracts/FlashLiquidator.sol#L121-L144
-
         Joetroller joetroller = Joetroller(joetrollerAddress);
         PriceOracle priceOracle = joetroller.oracle();
-
-        console.log("[JoeLiquidator] Got joetroller and oracle...");
 
         uint256 closeFactor = joetroller.closeFactorMantissa();
         uint256 liquidationIncentive = joetroller
             .liquidationIncentiveMantissa();
-
-        console.log(
-            "[JoeLiquidator] Got close factor (%d) and liqudation incentive (%d)...",
-            closeFactor,
-            liquidationIncentive
-        );
 
         uint256 repayTokenUnderlyingPrice = priceOracle.getUnderlyingPrice(
             JToken(_jRepayTokenAddress)
         );
         uint256 seizeTokenUnderlyingPrice = priceOracle.getUnderlyingPrice(
             JToken(_jSeizeTokenAddress)
-        );
-
-        console.log(
-            "[JoeLiquidator] Got repay token underlying price (%d) and seize token underlying price (%d)...",
-            repayTokenUnderlyingPrice,
-            seizeTokenUnderlyingPrice
-        );
-
-        console.log(
-            "[JoeLiquidator] Got current borrow balance (%d) and current seize balance (%d)...",
-            JTokenInterface(_jRepayTokenAddress).borrowBalanceStored(
-                _borrowerToLiquidate
-            ),
-            _getBalanceOfUnderlying(_jSeizeTokenAddress, _borrowerToLiquidate)
-            // JTokenInterface(_jSeizeTokenAddress).balanceOfUnderlying(
-            //     _borrowerToLiquidate
-            // )
         );
 
         uint256 maxRepayAmount = (JTokenInterface(_jRepayTokenAddress)
@@ -178,12 +140,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             _borrowerToLiquidate
         ) * uint256(10**18)) / liquidationIncentive;
 
-        console.log(
-            "[JoeLiquidator] Got max repay and seize amounts...",
-            repayTokenUnderlyingPrice,
-            seizeTokenUnderlyingPrice
-        );
-
         uint256 maxRepayAmountInUSD = maxRepayAmount *
             repayTokenUnderlyingPrice;
         uint256 maxSeizeAmountInUSD = maxSeizeAmount *
@@ -192,12 +148,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         uint256 maxAmountInUSD = (maxRepayAmountInUSD < maxSeizeAmountInUSD)
             ? maxRepayAmountInUSD
             : maxSeizeAmountInUSD;
-
-        console.log(
-            "[JoeLiquidator] Got max amount in USD...",
-            repayTokenUnderlyingPrice,
-            seizeTokenUnderlyingPrice
-        );
 
         return maxAmountInUSD / repayTokenUnderlyingPrice;
     }
@@ -213,9 +163,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         view
         returns (uint256)
     {
-        JTokenInterface jToken = JTokenInterface(_jTokenAddress);
-
         // From https://github.com/traderjoe-xyz/joe-lending/blob/main/contracts/JToken.sol#L128
+        JTokenInterface jToken = JTokenInterface(_jTokenAddress);
         Exp memory exchangeRate = Exp({mantissa: jToken.exchangeRateStored()});
         return mul_ScalarTruncate(exchangeRate, jToken.balanceOf(_account));
     }
@@ -301,12 +250,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         returns (JCollateralCapErc20Delegator)
     {
         if (_isRepayTokenUSDC) {
-            console.log("[JoeLiquidator] Flash loaning from:");
-            console.logAddress(jWETHAddress);
             return JCollateralCapErc20Delegator(jWETHAddress);
         } else {
-            console.log("[JoeLiquidator] Flash loaning from:");
-            console.logAddress(jUSDCAddress);
             return JCollateralCapErc20Delegator(jUSDCAddress);
         }
     }
@@ -330,10 +275,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             Joetroller(joetrollerAddress).isMarketListed(msg.sender),
             "JoeLiquidator: Untrusted message sender calling onFlashLoan"
         );
-        console.log("[JoeLiquidator] onFlashLoan was called by:");
-        console.logAddress(msg.sender);
-        console.log("[JoeLiquidator] The flash loan token address is:");
-        console.logAddress(_flashLoanTokenAddress);
 
         LiquidationLocalVars
             memory liquidationLocalVars = _getLiquidationLocalVars(
@@ -468,12 +409,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _jRepayTokenUnderlyingAddress,
         uint256 _repayAmount
     ) internal {
-        console.log(
-            "[JoeLiquidator] Swapping flash loan token (posses %d) for repay token (need %d)...",
-            _flashLoanAmount,
-            _repayAmount
-        );
-
         // Swap flashLoanedToken (e.g. USDC.e) to jBorrowTokenUnderlying (e.g. MIM)
         // Approve JoeRouter to transfer our flash loaned token so that we can swap for
         // the underlying repay token
@@ -486,24 +421,9 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         swapPath[0] = _flashLoanedTokenAddress;
         swapPath[1] = _jRepayTokenUnderlyingAddress;
 
-        uint256[] memory amountsOutDebug = _getAmountsOut(
-            _flashLoanAmount,
-            swapPath
-        );
-        console.log(
-            "[JoeLiquidator] Getting amounts out returns (%d, %d) with path:",
-            amountsOutDebug[0],
-            amountsOutDebug[1]
-        );
-        console.logAddress(_flashLoanedTokenAddress);
-        console.logAddress(_jRepayTokenUnderlyingAddress);
-
         bool isRepayNative = _jRepayTokenUnderlyingAddress == WAVAX;
 
         if (isRepayNative) {
-            console.log(
-                "[JoeLiquidator] Swapping flash loan token to AVAX repay tokens..."
-            );
             JoeRouter02(joeRouter02Address).swapExactTokensForAVAX(
                 _flashLoanAmount, // amountIn
                 _repayAmount, // amountOutMin
@@ -512,9 +432,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 block.timestamp // deadline
             );
         } else {
-            console.log(
-                "[JoeLiquidator] Swapping flash loan token to ERC20 repay tokens..."
-            );
             JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
                 _flashLoanAmount, // amountIn
                 _repayAmount, // amountOutMin
@@ -542,112 +459,22 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         // to liquidate the borrow position.
         bool isRepayNative = _jRepayToken.underlying() == WAVAX;
 
-        console.log(
-            "JoeLiquidator: About to _liquidateBorrow. isRepayNative is: %s",
-            isRepayNative ? "true" : "false"
-        );
-
         uint256 repayTokenBalance = isRepayNative
             ? address(this).balance
             : ERC20(_jRepayToken.underlying()).balanceOf(address(this));
-        console.log(
-            "JoeLiquidator: About to _liquidateBorrow. repayTokenBalance is %d and repayAmount is %d",
-            repayTokenBalance,
-            _repayAmount
-        );
         require(
             repayTokenBalance >= _repayAmount,
             "JoeLiquidator: Expected to have enough underlying repay token to liquidate borrow position."
         );
-        console.log(
-            "[JoeLiquidator] About to liquidateBorrow. Possess %d tokens of address:",
-            repayTokenBalance
-        );
-        console.logAddress(_jRepayToken.underlying());
 
         uint256 err;
         if (isRepayNative) {
-            // // Debug: Confirm we can accrue interest
-            // err = JWrappedNativeDelegator(address(_jRepayToken))
-            //     .accrueInterest();
-            // if (err != 0) {
-            //     console.log(
-            //         "[JoeLiquidator] Failed to accrue interest on repay jToken address:"
-            //     );
-            //     console.logAddress(address(_jRepayToken));
-            // }
-
-            // err = _jSeizeToken.accrueInterest();
-            // if (err != 0) {
-            //     console.log(
-            //         "[JoeLiquidator] Failed to accrue interest on seize jToken address:"
-            //     );
-            //     console.logAddress(address(_jSeizeToken));
-            // }
-
-            // Debug: Confirm liquidate borrow is allowed
-            uint256 liquidationAllowed = Joetroller(joetrollerAddress)
-                .liquidateBorrowAllowed(
-                    address(_jRepayToken), // jTokenBorrowed
-                    address(_jSeizeToken), // jTokenCollateral
-                    address(this), // liquidator
-                    _borrowerToLiquidate, // borrower
-                    _repayAmount // repayAmount
-                );
-            // if (liquidationAllowed != 0) {
-            console.log(
-                "[JoeLiquidator] Joetroller liquidateBorrowAllowed: %d",
-                liquidationAllowed
-            );
-            // }
-
-            (uint256 accountLiquidityErr, , uint256 shortfall) = Joetroller(
-                joetrollerAddress
-            ).getAccountLiquidity(_borrowerToLiquidate);
-            console.log(
-                "[JoeLiquidator] Joetroller borrowerToLiquidate shortfall (%d) and err (%d)",
-                shortfall,
-                accountLiquidityErr
-            );
-
-            uint256 repayBorrowAllowed = Joetroller(joetrollerAddress)
-                .repayBorrowAllowed(
-                    address(_jRepayToken),
-                    address(this),
-                    _borrowerToLiquidate,
-                    _repayAmount
-                );
-            console.log(
-                "[JoeLiquidator] Joetroller isRepayAllowed: (%d)...",
-                repayBorrowAllowed
-            );
-
-            uint256 jSeizeTokenAccrualBlockTimestamp = _jSeizeToken
-                .accrualBlockTimestamp();
-            uint256 currentBlockTimestamp = block.timestamp;
-            console.log(
-                "[JoeLiquidator] jSeizeToken accrualBlockTimestamp of %d and currentBlockTimestamp %d...",
-                jSeizeTokenAccrualBlockTimestamp,
-                currentBlockTimestamp
-            );
-            // require(
-            //     jSeizeTokenAccrualBlockTimestamp == currentBlockTimestamp,
-            //     "JoeLiquidator: jSeizeToken accrualBlockTimestamp not equal to current block timestamp"
-            // );
-
-            console.log(
-                "[JoeLiquidator] Calling liquidateBorrowNative with args:"
-            );
-            console.log("repayAmount: %d", _repayAmount);
-            console.logAddress(_borrowerToLiquidate);
-            console.logAddress(address(_jSeizeToken));
             err = JWrappedNativeInterface(address(_jRepayToken))
                 .liquidateBorrowNative{value: _repayAmount}(
                 _borrowerToLiquidate,
                 _jSeizeToken
             );
         } else {
-            console.log("[JoeLiquidator] Calling liquidateBorrow on ERC20...");
             // Approve repay jToken to take our underlying repay jToken so that we
             // can perform liquidation
             ERC20(_jRepayToken.underlying()).approve(
@@ -660,12 +487,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 _borrowerToLiquidate,
                 _repayAmount,
                 _jSeizeToken
-            );
-        }
-        if (err != 0) {
-            console.log(
-                "[JoeLiquidator][ERROR] Received error %d trying to liquidateBorrow...",
-                err
             );
         }
         require(
@@ -703,11 +524,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             err == 0,
             "JoeLiquidator: Error occurred trying to redeem underlying seize tokens"
         );
-        console.log(
-            "[JoeLiquidator] Successfully redeemed %d jSeizeTokens with address:",
-            amountOfJSeizeTokensToRedeem
-        );
-        console.logAddress(_jSeizeTokenAddress);
     }
 
     /**
@@ -722,10 +538,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         address _flashLoanTokenAddress,
         uint256 _flashLoanAmountToRepay
     ) internal {
-        console.log(
-            "[JoeLiquidator] Swapping seize tokens to flash tokens to repay flash loan total (%d)...",
-            _flashLoanAmountToRepay
-        );
         JErc20Storage jSeizeToken = JErc20Storage(_jSeizeTokenAddress);
         address jSeizeTokenUnderlyingAddress = jSeizeToken.underlying();
 
@@ -735,19 +547,8 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         swapPath[0] = jSeizeTokenUnderlyingAddress;
         swapPath[1] = _flashLoanTokenAddress;
 
-        console.log(
-            "[JoeLiquidator] Calculating amount of seize token to swap with path:"
-        );
-        console.logAddress(jSeizeTokenUnderlyingAddress);
-        console.logAddress(_flashLoanTokenAddress);
-
         uint256 amountOfSeizeTokenToSwap = JoeRouter02(joeRouter02Address)
             .getAmountsIn(_flashLoanAmountToRepay, swapPath)[0];
-
-        console.log(
-            "[JoeLiquidator] Amount of seize tokens to swap to flash token (%d)...",
-            amountOfSeizeTokenToSwap
-        );
 
         bool isSeizeNative = jSeizeTokenUnderlyingAddress == WAVAX;
         if (isSeizeNative) {
@@ -764,11 +565,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
             // seize tokens
             ERC20 seizeToken = ERC20(jSeizeTokenUnderlyingAddress);
             seizeToken.approve(joeRouter02Address, amountOfSeizeTokenToSwap);
-
-            console.log(
-                "[JoeLiquidator] Amount of seize tokens we possess (%d)...",
-                seizeToken.balanceOf(address(this))
-            );
 
             // Swap seized token to flash loan token
             JoeRouter02(joeRouter02Address).swapExactTokensForTokens(
@@ -821,11 +617,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                 "JoeLiquidator: Expected to have remaining seize amount in order to have profited from liquidation"
             );
 
-            console.log(
-                "[JoeLiquidator] We have %d remaining seize tokens to swap to AVAX...",
-                remainingSeizeAmount
-            );
-
             seizeToken.approve(joeRouter02Address, remainingSeizeAmount);
 
             address[] memory swapPath = new address[](2);
@@ -840,11 +631,6 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
                     _initiator, // to
                     block.timestamp // deadline
                 );
-            console.log(
-                "[JoeLiquidator] Successfully transferred all profitted AVAX! (%d, %d)",
-                amounts[0],
-                amounts[1]
-            );
 
             // Return profitted AVAX
             return amounts[1];
@@ -870,13 +656,5 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
         // Approve flash loan lender to retrieve loan amount + fee from us
         flashLoanToken.approve(msg.sender, _flashLoanAmountToRepay);
-    }
-
-    function _getAmountsOut(uint256 _amountIn, address[] memory _path)
-        internal
-        view
-        returns (uint256[] memory amounts)
-    {
-        return JoeRouter02(joeRouter02Address).getAmountsOut(_amountIn, _path);
     }
 }

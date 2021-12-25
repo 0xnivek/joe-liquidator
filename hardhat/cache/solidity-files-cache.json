@@ -37,8 +37,8 @@
       ]
     },
     "/Users/kevinchan/Documents/crypto/joe-liquidator/hardhat/contracts/JoeLiquidator.sol": {
-      "lastModificationDate": 1640410994284,
-      "contentHash": "5e0be929a7c772d7c1fa0ebf6832fd53",
+      "lastModificationDate": 1640456880719,
+      "contentHash": "5df5db73910c5f521feee2ac628a39dd",
       "sourceName": "contracts/JoeLiquidator.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -64,7 +64,6 @@
         }
       },
       "imports": [
-        "hardhat/console.sol",
         "./interfaces/ERC20Interface.sol",
         "./interfaces/ERC3156FlashBorrowerInterface.sol",
         "./interfaces/ERC3156FlashLenderInterface.sol",
