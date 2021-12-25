@@ -24,7 +24,7 @@ contract JoeLiquidator {
 }
 ```
 
-To learn more, see [Liquidation](#liquidation).
+To learn more, see [Liquidation Process](#liquidation-process).
 
 ### `liquidator-bot`
 
@@ -74,7 +74,9 @@ cd liquidator
 yarn test
 ```
 
-## Liquidation
+## Background
+
+### Liquidation
 
 Liquidation is possible when an account is incurring a shortfall, i.e. their total borrow balance exceeds their total
 collateral balance. To prevent the potential losses, the protocol exposes a public `liquidateBorrow/liquidateBorrowNative` 
@@ -84,10 +86,11 @@ Liquidation itself is the process of selling a portion of the underwater account
 the *liquidation incentive*, to a liquidator in exchange for the liquidator repaying an equivalent amount of the underwater
 account's borrow position. The maximum amount of collateral that can be sold to the liquidator is determined by the *close factor*.
 
+### Flash Loans
+
+## Liquidation Process
+
 Specifically, *Joe Liquidator* performs liquidation using [**flash loans**](#flash-loans). The algorithm followed for liquidation
 is as follows:
 
 1. 
-
-
-## Flash Loans
