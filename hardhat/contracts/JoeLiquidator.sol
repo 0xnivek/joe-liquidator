@@ -788,6 +788,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
     }
 
+    /**
+     * @notice Swaps all remaining of the seized collateral to AVAX, unless
+     * the seized collateral is already AVAX, and sends it to the initiator.
+     * @param _initiator The initiator of the flash loan, aka the liquidator
+     * @param _jSeizeTokenAddress The address of jToken collateral was seized from
+     * @return The AVAX received as profit from performing the liquidation.
+     */
     function _swapRemainingSeizedTokenToAVAX(
         address _initiator,
         address _jSeizeTokenAddress
