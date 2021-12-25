@@ -3,13 +3,12 @@ const fetch = require('isomorphic-unfetch');
 const { createClient, gql } = require('@urql/core');
 
 const JOE_LIQUIDATOR_ABI = require('./abis/JoeLiquidator');
-const WAVAX_ABI = require('./abis/WAVAX');
 const WETH_ABI = require('./abis/WETH');
 
 const { WALLET_PRIVATE_KEY } = process.env;
 
+const INTERVAL_IN_MS = 10000;
 const JOE_LIQUIDATOR_CONTRACT_ADDRESS = "0xdc13687554205E5b89Ac783db14bb5bba4A1eDaC";
-const WAVAX_CONTRACT_ADDRESS = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 const WETH_CONTRACT_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
 // From https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts
@@ -41,9 +40,21 @@ const UNDERWATER_ACCOUNTS_QUERY = gql`
   }
 `
 
-const client = createClient({
+const URQL_CLIENT = createClient({
   url: TRADER_JOE_LENDING_GRAPH_URL,
 });
+
+const getJTokenData = (token) => {
+  const { id, market } = token;
+  const { symbol } = market;
+
+  // id is formatted as '<jToken address>-<borrower address>'
+  const jTokenAddress = id.slice(0, id.indexOf('-'));
+  return {
+    jTokenAddress,
+    symbol
+  };
+}
 
 const getBorrowValueInUSD = (token) => {
   const { borrowBalanceUnderlying: borrowBalanceUnderlyingStr, market } = token;
@@ -90,39 +101,63 @@ const findBorrowAndSupplyPosition = (tokens) => {
   return null;
 }
 
-const run = async () => {
-  client.query(UNDERWATER_ACCOUNTS_QUERY)
-    .toPromise()
-    .then((result) => {
-      const { data: { accounts } } = result;
-      const account = accounts[0];
-      // Approximately:
-      // totalBorrowValueInUSD = sum(borrowBalanceUnderlying * underlyingPriceUSD)
-      // totalCollateralValueInUSD = sum(supplyBalanceUnderlying * underlyingPriceUSD * collateralFactor)
-      const { totalBorrowValueInUSD, totalCollateralValueInUSD, tokens } = account;
-      console.log("totalBorrowValueInUSD:", totalBorrowValueInUSD);
-      console.log("totalCollateralValueInUSD:", totalCollateralValueInUSD);
-      // console.log("TOKENS:", tokens);
-
-      const { borrowPositionToRepay, supplyPositionToSeize } = findBorrowAndSupplyPosition(tokens)
-      console.log("BORROW POSITION TO REPAY:", borrowPositionToRepay);
-      console.log("SUPPLY POSITION TO SEIZE:", supplyPositionToSeize);
-    })
-    .catch((err) => {
-      console.log('Error fetching subgraph data: ', err);
-    })
-}
-
-run();
-return
-
-const testing = async () => {
+const getJoeLiquidatorContract = () => {
   // Following https://medium.com/coinmonks/hello-world-smart-contract-using-ethers-js-e33b5bf50c19
   const provider = ethers.getDefaultProvider();
   const wallet = new ethers.Wallet(WALLET_PRIVATE_KEY, provider);
-  // const wavaxContract = new ethers.Contract(WAVAX_CONTRACT_ADDRESS, WAVAX_ABI, wallet);
-  const wethContract = new ethers.Contract(WETH_CONTRACT_ADDRESS, WETH_ABI, wallet);
-
-  console.log(await wethContract.name());
-  console.log(await wethContract.symbol());
+  return new ethers.Contract(JOE_LIQUIDATOR_CONTRACT_ADDRESS, JOE_LIQUIDATOR_ABI, wallet);
 }
+
+const JOE_LIQUIDATOR_CONTRACT = getJoeLiquidatorContract();
+
+const tryLiquidateAccount = async (account) => {
+  const { tokens } = account;
+
+  const borrowAndSupplyPosition = findBorrowAndSupplyPosition(tokens);
+  if (borrowAndSupplyPosition === null) {
+    console.log("😴 No liquidatable accounts found. Sleeping for 5 seconds...");
+    return;
+  }
+
+  console.log("🤩 Found underwater account to liquidate!");
+  const { borrowPositionToRepay, supplyPositionToSeize } = borrowAndSupplyPosition;
+
+  const { jTokenAddress: jRepayTokenAddress, symbol: jRepayTokenSymbol } = getJTokenData(borrowPositionToRepay);
+  const { jTokenAddress: jSeizeTokenAddress, symbol: jSeizeTokenSymbol } = getJTokenData(supplyPositionToSeize);
+  const { id: borrowerToLiquidateAddress } = account;
+
+  console.log(
+    `🌊 Performing liquidation on borrower ${borrowerToLiquidateAddress} with borrow position ` +
+    `on ${jRepayTokenSymbol} and supply position on ${jSeizeTokenSymbol}`
+  );
+
+  // await JOE_LIQUIDATOR_CONTRACT.liquidate(
+  //   borrowerToLiquidateAddress,
+  //   jRepayTokenAddress,
+  //   jSeizeTokenAddress
+  // );
+}
+
+const run = async () => {
+  URQL_CLIENT.query(UNDERWATER_ACCOUNTS_QUERY)
+    .toPromise()
+    .then(async (result) => {
+      console.log("🔎 Searching for account to liquidate...");
+
+      const { data: { accounts } } = result;
+      for (const account of accounts) {
+        await tryLiquidateAccount(account);
+      }
+
+      console.log(`✨ Finished searching through accounts. Will search again in ${INTERVAL_IN_MS / 1000} seconds..\n`);
+    })
+    .catch((err) => {
+      console.log('Error performing liquidation: ', err);
+    })
+}
+
+console.log("🔧 Bot starting up...");
+console.log(`🔁 Bot will query the subgraph every ${INTERVAL_IN_MS / 1000} seconds to search for liquidatable accounts...`);
+
+// Query the subgraph and attempt to perform liquidation every INTERVAL_IN_MS
+setInterval(run, INTERVAL_IN_MS);
