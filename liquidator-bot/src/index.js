@@ -186,7 +186,7 @@ const run = async () => {
 }
 
 console.log("🔧 Bot starting up...");
-console.log(`🔁 Bot will query the subgraph every ${INTERVAL_IN_MS / 1000} seconds to search for liquidatable accounts...`);
+console.log(`🔁 Bot will query the subgraph every ${INTERVAL_IN_MS / 1000} seconds to search for liquidatable accounts...\n`);
 
 /// Query the subgraph and attempt to perform liquidation every INTERVAL_IN_MS
 setInterval(run, INTERVAL_IN_MS);

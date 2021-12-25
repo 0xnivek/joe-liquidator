@@ -147,7 +147,7 @@ swap the flash loan token for the repay token, and then call `liquidateBorrow`.
 
 ## Bot
 
-The bot works in a very simple fashion. Every `INTERVAL_IN_MS` (currently set to `30000`) it will:
+The bot works in a very simple fashion. Every `INTERVAL_IN_MS` (currently set to `10000`) it will:
 
 1. Query Banker Joe lending [subgraph](https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts) for underwater accounts
 2. Choose an underwater account
@@ -159,3 +159,5 @@ The bot works in a very simple fashion. Every `INTERVAL_IN_MS` (currently set to
 5. Call `JoeLiquidator#liquidate`
 
 **NOTE:** `JoeLiquidator.sol` needs to be deployed to mainnet for the bot to work properly.
+
+<img width="719" alt="Screen Shot 2021-12-25 at 5 39 49 PM" src="https://user-images.githubusercontent.com/26048121/147394828-18aab668-8cda-45e8-b7c2-83fb71fd8142.png">
