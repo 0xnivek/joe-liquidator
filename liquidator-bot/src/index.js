@@ -6,7 +6,7 @@ const JOE_LIQUIDATOR_ABI = require('./abis/JoeLiquidator');
 
 const { JOE_LIQUIDATOR_CONTRACT_ADDRESS, WALLET_PRIVATE_KEY } = process.env;
 
-const INTERVAL_IN_MS = 30000;
+const INTERVAL_IN_MS = 10000;
 
 /// From https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts
 const TRADER_JOE_LENDING_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/traderjoe-xyz/lending';
