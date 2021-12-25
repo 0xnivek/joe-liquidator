@@ -76,3 +76,18 @@ yarn test
 
 ## Liquidation
 
+Liquidation is possible when an account is incurring a shortfall, i.e. their total borrow balance exceeds their total
+collateral balance. To prevent the potential losses, the protocol exposes a public `liquidateBorrow/liquidateBorrowNative` 
+function that can be called by anyone to "liquidate" an underwater account.
+
+Liquidation itself is the process of selling a portion of the underwater account's collateral at a discounted rate, i.e.
+the *liquidation incentive*, to a liquidator in exchange for the liquidator repaying an equivalent amount of the underwater
+account's borrow position. The maximum amount of collateral that can be sold to the liquidator is determined by the *close factor*.
+
+Specifically, *Joe Liquidator* performs liquidation using [**flash loans**](#flash-loans). The algorithm followed for liquidation
+is as follows:
+
+1. 
+
+
+## Flash Loans
