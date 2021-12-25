@@ -36,7 +36,7 @@ const DAIE = "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70";
 const LINKE = "0x5947BB275c521040051D82396192181b413227A3";
 const MIM = "0x130966628846BFd36ff31a822705796e8cb8C18D";
 
-describe("JoeLiquidator", function () {
+xdescribe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
@@ -85,9 +85,6 @@ describe("JoeLiquidator", function () {
     // Collateral factor of jAVAX (supply): 0.75
     // Queried by using Joetroller#markets(address _jTokenAddress) => Market
     it("Test liquidate USDC borrow position and native supply position", async function () {
-      const currBlock = await ethers.provider.getBlock();
-      console.log("CURRENT BLOCK NUMBER:", currBlock.number);
-
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 

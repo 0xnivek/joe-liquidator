@@ -79,9 +79,6 @@ describe("JoeLiquidator", function () {
     // Collateral factor of jUSDT (borrow): 0.8
     // Collateral factor of jLINK (supply): 0.6
     it("Test liquidate USDT borrow position and LINK supply position", async function () {
-      const currBlock = await ethers.provider.getBlock();
-      console.log("CURRENT BLOCK NUMBER:", currBlock.number);
-
       // Increase default timeout from 20s to 60s
       this.timeout(60000)
 
