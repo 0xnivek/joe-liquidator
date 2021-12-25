@@ -1,0 +1,419 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/interfaces/ERC20Interface.sol": {
+      "lastModificationDate": 1640223103473,
+      "contentHash": "e61ef640afe8b8dd3e9e5b9863be2a9a",
+      "sourceName": "contracts/interfaces/ERC20Interface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "ERC20"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/JoeLiquidator.sol": {
+      "lastModificationDate": 1640456880719,
+      "contentHash": "5df5db73910c5f521feee2ac628a39dd",
+      "sourceName": "contracts/JoeLiquidator.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/ERC20Interface.sol",
+        "./interfaces/ERC3156FlashBorrowerInterface.sol",
+        "./interfaces/ERC3156FlashLenderInterface.sol",
+        "./interfaces/WAVAXInterface.sol",
+        "./lending/JTokenInterfaces.sol",
+        "./lending/JoeRouter02.sol",
+        "./lending/JoetrollerInterface.sol",
+        "./lending/PriceOracle.sol",
+        "./lending/Exponential.sol",
+        "./libraries/SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "JoeLiquidator"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/interfaces/ERC3156FlashBorrowerInterface.sol": {
+      "lastModificationDate": 1640042681896,
+      "contentHash": "c15b9ca7b4661dcd9c6a95dc8958e563",
+      "sourceName": "contracts/interfaces/ERC3156FlashBorrowerInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "ERC3156FlashBorrowerInterface"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/interfaces/ERC3156FlashLenderInterface.sol": {
+      "lastModificationDate": 1640042688642,
+      "contentHash": "ceb263f906a943c1e2b5c2717dd8e3a3",
+      "sourceName": "contracts/interfaces/ERC3156FlashLenderInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ERC3156FlashBorrowerInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "ERC3156FlashLenderInterface"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/interfaces/WAVAXInterface.sol": {
+      "lastModificationDate": 1640223464171,
+      "contentHash": "347b0da12cf0e5c72a608deae9656c46",
+      "sourceName": "contracts/interfaces/WAVAXInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "WAVAXInterface"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/lending/JTokenInterfaces.sol": {
+      "lastModificationDate": 1640453390609,
+      "contentHash": "77c1593e469ee81c013d4c2d46db9777",
+      "sourceName": "contracts/lending/JTokenInterfaces.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/ERC3156FlashBorrowerInterface.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "JCollateralCapErc20Delegator",
+        "JCollateralCapErc20Interface",
+        "JErc20Interface",
+        "JErc20Storage",
+        "JToken",
+        "JTokenInterface",
+        "JTokenStorage",
+        "JWrappedNativeDelegator",
+        "JWrappedNativeInterface"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/lending/JoeRouter02.sol": {
+      "lastModificationDate": 1640285845328,
+      "contentHash": "40e09311d4478f85eb02e2d7dcbd6b3a",
+      "sourceName": "contracts/lending/JoeRouter02.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "JoeRouter02"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/lending/JoetrollerInterface.sol": {
+      "lastModificationDate": 1640379043659,
+      "contentHash": "4acb949f84de6c37cf7ed8659a8871d4",
+      "sourceName": "contracts/lending/JoetrollerInterface.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./JTokenInterfaces.sol",
+        "./PriceOracle.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "Joetroller",
+        "JoetrollerV1Storage"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/lending/PriceOracle.sol": {
+      "lastModificationDate": 1640229549094,
+      "contentHash": "d3f8ac04fbfcdfcdb8e43a37cf77dc8a",
+      "sourceName": "contracts/lending/PriceOracle.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./JTokenInterfaces.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "PriceOracle"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/lending/Exponential.sol": {
+      "lastModificationDate": 1640282298116,
+      "contentHash": "0c4ccd9d0a95ba47dd0b3a1620c62eb8",
+      "sourceName": "contracts/lending/Exponential.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "Exponential"
+      ]
+    },
+    "/Users/kevinchan/Documents/crypto/joe-liquidator/liquidator/contracts/libraries/SafeMath.sol": {
+      "lastModificationDate": 1640030581986,
+      "contentHash": "79ba4b775bd149e5f015962e854d5a2d",
+      "sourceName": "contracts/libraries/SafeMath.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.3"
+      ],
+      "artifacts": [
+        "SafeMath"
+      ]
+    }
+  }
+}
