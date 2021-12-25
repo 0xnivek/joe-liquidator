@@ -49,7 +49,7 @@ const getTxnLogs = (contract, txnReceipt) => {
   return logs;
 }
 
-xdescribe("JoeLiquidator", function () {
+describe("JoeLiquidator", function () {
   let joeLiquidatorContract;
   let joetrollerContract;
   let joeRouterContract;
