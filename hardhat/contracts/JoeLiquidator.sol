@@ -62,10 +62,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
 
     // =================== MODIFIERS ===================
 
-    /// @notice Ensure that we can liquidate the borrower
-    /// @dev A borrower is liquidatable if:
-    ///      1. Their `liquidity` is zero
-    ///      2. Their `shortfall` is non-zero
+    /**
+     * @notice Ensure that we can liquidate the borrower
+     * @dev A borrower is liquidatable if:
+     *      1. Their `liquidity` is zero
+     *      2. Their `shortfall` is non-zero
+     */
     modifier isLiquidatable(address _borrowerToLiquidate) {
         (, uint256 liquidity, uint256 shortfall) = Joetroller(joetrollerAddress)
             .getAccountLiquidity(_borrowerToLiquidate);
@@ -86,6 +88,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         _;
     }
 
+    /**
+     * @dev Liquidates a borrower with a given jToken to repay and
+     * jToken to seize.
+     * @param _borrowerToLiquidate: Address of the borrower to liquidate
+     * @param _jRepayTokenAddress: Address of the jToken to repay
+     * @param _jSeizeTokenAddress: Address of the jToken to seize
+     */
     function liquidate(
         address _borrowerToLiquidate,
         address _jRepayTokenAddress,
@@ -110,6 +119,13 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         );
     }
 
+    /**
+     * @dev Calculates amount of the borrow position to repay
+     * @param _borrowerToLiquidate: Address of the borrower to liquidate
+     * @param _jRepayTokenAddress: Address of the jToken to repay
+     * @param _jSeizeTokenAddress: Address of the jToken to seize
+     * @return the amount of jRepayToken to repay
+     */
     function getAmountToRepay(
         address _borrowerToLiquidate,
         address _jRepayTokenAddress,
@@ -189,7 +205,11 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @notice Perform flash loan for given jToken and amount
+     * @dev Performs flash loan of:
+     * - WETH if _jRepayTokenAddress == jUSDC
+     * - USDC otherwise
+     * Upon receiving the flash loan, the tokens are swapped to the tokens needed
+     * to repay the borrow position (i.e. jRepayToken.underlying()).
      * @param _borrowerToLiquidate The address of the borrower to liquidate
      * @param _jRepayTokenAddress The address of the jToken contract to borrow from
      * @param _jSeizeTokenAddress The address of the jToken contract to seize collateral from
@@ -230,12 +250,12 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
     }
 
     /**
-     * @notice Called by FlashLoanLender once flashloan is approved
+     * @dev Called by `ERC3156FlashLenderInterface` upon request of a flash loan
      * @param _initiator The address that initiated this flash loan
-     * @param _flashLoanTokenAddress The address of the underlying token contract borrowed from
-     * @param _flashLoanAmount The amount of the tokens borrowed
+     * @param _flashLoanTokenAddress The address of the flash loan jToken's underlying asset
+     * @param _flashLoanAmount The flash loan amount granted
      * @param _flashLoanFee The fee for this flash loan
-     * @param _data The encoded data used for this flash loan
+     * @param _data The encoded data sent for this flash loan
      */
     function onFlashLoan(
         address _initiator,
@@ -331,6 +351,15 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         return keccak256("ERC3156FlashBorrowerInterface.onFlashLoan");
     }
 
+    /**
+     * @dev Decodes the encoded `_data` and packs relevant data needed to perform
+     * liquidation into a `LiquidationLocalVars` struct.
+     * @param _initiator The address that initiated this flash loan
+     * @param _flashLoanTokenAddress The address of the flash loan jToken's underlying asset
+     * @param _flashLoanAmount The flash loan amount granted
+     * @param _data The encoded data sent for this flash loan
+     * @return relevant decoded data needed to perform liquidation
+     */
     function _getLiquidationLocalVars(
         address _initiator,
         address _flashLoanTokenAddress,
