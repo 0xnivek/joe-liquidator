@@ -265,6 +265,14 @@ contract JoeLiquidator is ERC3156FlashBorrowerInterface, Exponential {
         jTokenToFlashLoan.flashLoan(this, msg.sender, flashLoanAmount, data);
     }
 
+    /**
+     * @dev Calculates the amount needed to flash loan in order to repay
+     * `_repayAmount` of the borrow position.
+     * @param _underlyingRepayToken The token of the borrow position to repay
+     * @param _repayAmount The amount of the borrow position to repay
+     * @param _isRepayTokenUSDC Whether the token of the borrow position to repay is USDC
+     * @return The flash loan amount required to repay the borrow position for liquidation.
+     */
     function _getFlashLoanAmount(
         address _underlyingRepayToken,
         uint256 _repayAmount,
