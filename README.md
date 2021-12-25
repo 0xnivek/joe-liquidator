@@ -121,7 +121,7 @@ is as follows:
 11. Transfer profited AVAX back to liquidator
 12. Repay flash loan
 
-In step 3, you may be wondering why we don't simply flash loan the token of the borrow position
+> **NOTE:** In step 3, you may be wondering why we don't simply flash loan the token of the borrow position
 that we're repaying. The reason is that the jToken contracts have a reetrancy guard which means that
 you cannot `flashLoan` and `liquidateBorrow` the same token. Thus, we have to flash loan a different token,
 swap the flash loan token for the repay token, and then call `liquidateBorrow`.
