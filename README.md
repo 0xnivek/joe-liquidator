@@ -28,8 +28,9 @@ To learn more, see [Liquidation Algorithm](#liquidation-algorithm).
 
 ### `bot`
 
-This directory contains a [node.js](https://nodejs.org/en/) project which is what continously
-searches for liquidatable accounts and calls our `JoeLiquidator` contract periodically.
+This directory contains a [node.js](https://nodejs.org/en/) project which is what periodically
+searches for liquidatable accounts using the [Banker Joe lending subgraph](https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts) 
+and calls our `JoeLiquidator` contract to perform liquidation.
 
 ## Setup
 
@@ -149,7 +150,7 @@ swap the flash loan token for the repay token, and then call `liquidateBorrow`.
 
 The bot works in a very simple fashion. Every `INTERVAL_IN_MS` (currently set to `10000`) it will:
 
-1. Query Banker Joe lending [subgraph](https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts) for underwater accounts
+1. Query [Banker Joe lending subgraph](https://thegraph.com/hosted-service/subgraph/traderjoe-xyz/lending?query=underwater%20accounts) for underwater accounts
 2. Choose an underwater account
 3. Iterate through `tokens` and find borrow position to repay
 4. Iterate through `tokens` and find supply position to seize where:
