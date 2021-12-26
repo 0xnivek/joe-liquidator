@@ -7,7 +7,7 @@ It was built adhering to this [*Trader Joe Liquidation Bot Flash Loans Spec*](ht
 
 ## Structure
 
-This repository is broken up into two main directories, `liquidator` and `liquidator-bot`
+This repository is broken up into two main directories, `liquidator` and `bot`
 
 ### `liquidator`
 
@@ -26,15 +26,15 @@ contract JoeLiquidator {
 
 To learn more, see [Liquidation Algorithm](#liquidation-algorithm).
 
-### `liquidator-bot`
+### `bot`
 
 This directory contains a [node.js](https://nodejs.org/en/) project which is what continously
 searches for liquidatable accounts and calls our `JoeLiquidator` contract periodically.
 
 ## Setup
 
-The only setup required is to make a copy of `liquidator-bot/env.template` and rename it to
-`liquidator-bot/.env`.
+The only setup required is to make a copy of `bot/env.template` and rename it to
+`bot/.env`.
 
 In this file, insert 
 
@@ -48,7 +48,7 @@ liquidation
 git clone https://github.com/kevinchan159/joe-liquidator.git
 cd joe-liquidator/liquidator
 yarn install
-cd ../liquidator-bot
+cd ../bot
 yarn install
 ```
 
@@ -64,7 +64,7 @@ yarn compile
 To run the bot:
 
 ```
-cd liquidator-bot
+cd bot
 yarn start
 ```
 
